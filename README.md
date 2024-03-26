@@ -11,20 +11,18 @@ Logical equivalence symbolic engine guided by tree-of-thoughts
 ## Set up
 ```bash
 python3 -m venv venv
-
 source venv/bin/activate
-
 pip install -r requirements.txt
 ```
 
 ## Roadmap
 
-1. Build symbolic engine
-2. Build prompt engine
-3. Set up LLM
-4. Recreate tree of thoughts // Or use original repo
-5. Set up experiment suite to track model performances
-6. Start experimenting with how to improve ToT
+- [ ] Build symbolic engine
+- [ ] Build prompt engine
+- [ ] Set up LLM
+- [ ] Recreate tree of thoughts // Or use original repo
+- [ ] Set up experiment suite to track model performances
+- [ ] Start experimenting with how to improve ToT
 
 ## Symbols
 
