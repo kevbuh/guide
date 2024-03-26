@@ -8,7 +8,7 @@
 Logical equivalence symbolic engine guided by tree-of-thoughts 
 
 
-## Set up
+## Setup
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -19,8 +19,10 @@ pip install -r requirements.txt
 
 - [ ] Build symbolic engine
 - [ ] Build prompt engine
-- [ ] Set up LLM
-- [ ] Recreate tree of thoughts // Or use original repo
+- [ ] boolean tree of thoughts
+    - [x] integrate original repo
+    - [ ] Set up boolean task
+    - [ ] Option for GPT 3.5-Tubro or Claude 3 Haiku
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
 
