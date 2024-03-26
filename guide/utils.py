@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import ast
 from collections import deque
+from dataclasses import dataclass
 
 @dataclass
 class booleanTree:

@@ -22,7 +22,7 @@ pip install -r requirements.txt
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
     - [ ] Set up boolean task
-    - [ ] Option for GPT 3.5-Tubro or Claude 3 Haiku
+    - [ ] Option for GPT-3.5 Turbo or Claude-3 Haiku
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
 
