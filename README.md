@@ -5,10 +5,12 @@ symbolic engine guided by tree-of-thoughts
 
 ## Roadmap
 
-1. Recreate tree of thoughts? Or use original repo.
-2. Build symbolic engine
-3. Set up experiment suite to track model performances
-4. Start experimenting with new things
+1. Build symbolic engine
+2. Build prompt engine
+3. Set up LLM
+4. Recreate tree of thoughts // Or use original repo
+5. Set up experiment suite to track model performances
+6. Start experimenting with how to improve ToT
 
 ## Symbols
 
