@@ -1,7 +1,13 @@
 # Guide
 
-Logical equivalence 
-symbolic engine guided by tree-of-thoughts 
+<div align="center">
+    <img src="https://raw.githubusercontent.com/kevbuh/guide/main/assets/system_overview.png" alt="System Overview" width="600"/>
+</div>
+
+
+Logical equivalence symbolic engine guided by tree-of-thoughts 
+
+
 
 ## Roadmap
 
