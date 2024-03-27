@@ -17,8 +17,13 @@ pip install -r requirements.txt
 
 ## Roadmap
 
-- [ ] Build symbolic engine
-- [ ] Build prompt engine
+- [x] Build symbolic engine
+    - [x] expression to AST representation
+    - [x] implement common laws on the AST
+    - [ ] complete writing the logic for the implication and bi-conditional laws
+- [x] Build prompt engine
+    - [x] use the engine to collect all the logical prompts
+    - [x] and feed it to the LM
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
     - [ ] Set up boolean task
