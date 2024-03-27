@@ -1,7 +1,7 @@
 # Guide
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/kevbuh/guide/main/assets/system_overview.png" alt="System Overview" width="600"/>
+    <img src="./assets/system_overview.png" alt="System Overview" width="600"/>
 </div>
 
 
