@@ -47,12 +47,15 @@ class booleanTree:
             case _:
                 self.astTree = self.tree
 
-    def parse_tree(self) -> ast:
-       """
-       Return AST parse tree of the input logic
-       """
-       self.parseTree = ast.parse(self.astTree, mode='eval')
-       return ast.dump(self.parseTree, indent=4)
+    def parse_tree(self, astTree=None) -> ast:
+        """
+        Return AST parse tree of the input logic
+        """
+        if astTree is None:
+           self.parseTree = ast.parse(self.astTree, mode='eval')
+        else:
+           self.parseTree = astTree
+        return ast.dump(self.parseTree, indent=4)
 
     def bfs_traversal(self, node):
         """
@@ -79,5 +82,39 @@ class booleanTree:
         """
         modules_ = []
         for node in self.bfs_traversal(self.parseTree):
-            modules_.append(type(node))
+            node_name = type(node).__name__
+            if node_name != "Expression" and node_name != "Load":
+                modules_.append(node_name)
         return modules_
+
+
+class helpers:
+    """
+    Helper class which contains all the important functions
+    """
+    def are_subtrees_equivalent(self, node1, node2):
+        """
+        Recursively check if two subtrees are equivalent
+        """
+        if node1 is None and node2 is None:
+            return True
+        if node1 is None or node2 is None:
+            return False
+        
+        if type(node1) != type(node2):
+            return False
+        
+        if isinstance(node1, ast.AST):
+            for attr in node1._fields:
+                if not self.are_subtrees_equivalent(getattr(node1, attr), getattr(node2, attr)):
+                    return False
+        elif isinstance(node1, list):
+            if len(node1) != len(node2):
+                return False
+            for n1, n2 in zip(node1, node2):
+                if not self.are_subtrees_equivalent(n1, n2):
+                    return False
+        else:
+            if node1 != node2:
+                return False
+        return True
