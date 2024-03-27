@@ -15,6 +15,44 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Example usage
+
+Looks like Claude-3 Haiku is already really good at identifying tautologies without ToT...
+
+```bash
+(venv) ➜  guide git:(main) ✗ python3 guide/prompt_engine.py
+
+original input expression: (x and y) or (x and y)
+Choose one of the following that you think will best help you solve if this statement is a tautology.
+Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best.
+#1., 'Commutative Law', '(x and y or x and y)'
+#2., 'Commutative Law', '(y and x or x and y)'
+#3., 'Commutative Law', '(y and x or y and x)'
+#4., 'Distributive Law', '((y and x or y) and (y and x or x))'
+
+---------------------
+
+The logical law that would be most helpful in determining if the given statement is a tautology is the Distributive Law.
+
+The Distributive Law states that for any logical expressions A, B, and C, the following is true:
+
+(A and B) or (A and C) = A and (B or C)
+
+Applying the Distributive Law to the given expression, we get:
+
+(x and y) or (x and y) = x and (y or y)
+
+Since y or y is always true (i.e., 1), the expression simplifies to:
+
+x and 1 = x
+
+Therefore, the given expression is a tautology, as it is always true regardless of the values of x and y.
+
+The correct selection is:
+
+4., 'Distributive Law', '((y and x or y) and (y and x or x))'
+```
+
 ## Roadmap
 
 - [x] Build symbolic engine
