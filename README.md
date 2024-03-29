@@ -59,9 +59,11 @@ The correct selection is:
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete writing the logic for the implication and bi-conditional laws
+    - [ ] simplify AST at each step
 - [x] Build prompt engine
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
+    - [ ] complete loop from llm choice back to prompt engine
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
     - [ ] Set up boolean task
