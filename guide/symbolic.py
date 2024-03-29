@@ -44,6 +44,8 @@ def apply_all_laws(expr, do_print=False):
   output : defaultdict(<class 'list'>, {'Commutative Law': ['(x and y or x and y)', '(y and x or x and y)', '(y and x or y and x)'], 'Distributive Law': ['((y and x or y) and (y and x or x))']})
   """
 
+  # ----------EXAMPLE INPUTS-----------
+
   # expr = "((not(x or y) and z) or True) <-> z"             # --> (not z and (not (z and (not x and not y)) and not True) or z and 1)
   # expr = "(not(x and not(y)) or ((not(y) and z))) and z"   # --> (z and (z and not y or (not x or not not y)))
   # expr = "(x and y) or (x and y)"                          # --> (y and x or y and x)
@@ -67,9 +69,7 @@ def apply_all_laws(expr, do_print=False):
   if do_print: print("input  :", expr)
   if do_print: print("detail :")
 
-
   # ----------APPLY LAWS ONTO AST ONE AT A TIME-----------
-
 
   # Identity Law
   for node in walk(parsed_code): 
@@ -207,11 +207,11 @@ def apply_all_laws(expr, do_print=False):
               new_expressions["DeMorgan Law"].append(modified_code[:-1])
               if do_print: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
 
-  # Idempotent Law
+  # Idempotent Law - NOTE: should apply idemptent to ((x and y) or (x and y)) and reduce to (x and y), but it doesn't.
   for node in walk(parsed_code): 
       match node:
           case BoolOp(op=Or(), values=[*objects]):                                                                    
-              if len(objects) > 1 and all(t_util.are_subtrees_equivalent(objects[0], obj) for obj in objects[1:]):
+              if t_util.are_subtrees_equivalent(objects[0], objects[1]):
                   new_node = objects[0]
                   new_ast = parsed_code
                   replaced_tree = ReplaceVisitor(node, new_node).visit(new_ast)
@@ -221,8 +221,8 @@ def apply_all_laws(expr, do_print=False):
 
   for node in walk(parsed_code): 
       match node:
-          case BoolOp(op=And(), values=[*objects]):                                                                   
-              if len(objects) > 1 and all(t_util.are_subtrees_equivalent(objects[0], obj) for obj in objects[1:]):
+          case BoolOp(op=And(), values=[*objects]):                                                                    
+              if t_util.are_subtrees_equivalent(objects[0], objects[1]):
                   new_node = objects[0]
                   replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                   modified_code = astor.to_source(replaced_tree)
