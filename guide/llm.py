@@ -2,8 +2,9 @@ import os
 import anthropic
 from dotenv import load_dotenv
 
+print("Loading API keys...make sure to set them up in a .env file")
 load_dotenv()
-api_key = os.getenv('ANTHROPIC_API_KEY')
+api_key = os.getenv('ANTHROPIC_API_KEY') # set up keys in a .env file
 client = anthropic.Anthropic(api_key=api_key)
 
 def haiku_message(message: str, system=""):
@@ -22,7 +23,8 @@ def haiku_message(message: str, system=""):
 if __name__ == '__main__':
     res2 = haiku_message("((not(x or y) and z) or True) <-> z")
     print(res2) 
-    """ this is what haiku responded with
+    # below is what haiku responded with
+    """
     Message(id='msg_01H6C9fXicQGgYidinRFZhzN', content=[ContentBlock(text=
 
     'The given expression is:
