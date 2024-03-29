@@ -41,16 +41,15 @@ pip install -r requirements.txt
 
 ## Example usage
 
-Looks like the system works for simple expressions! This example uses ((x and x) or (x and x)) below.
+Looks like the system works for simple expressions! This example uses ((x and x) or (x and x)) below (output not deterministic).
 
 Command
 ```bash
-(venv) ➜  guide git:(main) ✗ python3 guide/prompt_engine.py
+python3 guide/prompt_engine.py --expr="(x and x) or (x and x)"
 ```
 
 Output
 ```bash
-(venv) ➜  guide git:(main) ✗ python3 guide/prompt_engine.py
 Loading API keys...make sure to set them up in a .env file
 
 ***PROOF STEP #1***

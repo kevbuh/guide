@@ -10,6 +10,11 @@ def prompt_engine_loop(og_expr, num_loops=2, do_print=True, debug=False):
         if do_print:
             print(f"\n***PROOF STEP #{i+1}***\n")
             print(f"CURRENT EXPR: {expr}")
+
+        if expr in ["True", "False", "1", "0", "x", "y"]:
+            print(f"Expression '{expr}' cannot be further applied onto laws")
+            break
+        
         laws_tuple = apply_all_laws(expr, do_print=False)
     
         # set up prompt
@@ -69,6 +74,20 @@ def prompt_engine_loop(og_expr, num_loops=2, do_print=True, debug=False):
     return proof_history
 
 if __name__ == '__main__':
-    expr = "(x and x) or (x and x)"
-    num_steps = 2
+    import argparse
+    parser = argparse.ArgumentParser(description="Prompt engine CLI args")
+    parser.add_argument("--expr", type=str, help="The expression to evaluate")
+    parser.add_argument("--num_steps", type=str, help="Num of proof steps")
+    args = parser.parse_args()
+
+    if args.expr:
+        expr = args.expr
+    else:
+        expr = "(x and x) or (x and x)"
+    
+    if args.num_steps:
+        num_steps = int(args.num_steps)
+    else:
+        num_steps = 2
+        
     prompt_engine_loop(expr, num_loops=num_steps)
