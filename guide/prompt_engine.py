@@ -2,20 +2,20 @@ import re
 from llm import haiku_message
 from symbolic import apply_all_laws
 
-def prompt_engine_loop(og_expr, num_loops=2, do_print=True, debug=False):
+def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     expr = og_expr
     proof_history=[og_expr]
     
-    for i in range(num_loops): # TODO: go until tautology?
+    for i in range(max_num_steps):
         if do_print:
             print(f"\n***PROOF STEP #{i+1}***\n")
             print(f"CURRENT EXPR: {expr}")
 
-        if expr in ["True", "False", "1", "0", "x", "y"]:
+        if expr in ["True", "False", "1", "0", "x", "y"]: # can determine if tautology or not
             print(f"Expression '{expr}' cannot be further applied onto laws")
             break
         
-        laws_tuple = apply_all_laws(expr, do_print=False)
+        all_laws_applied = apply_all_laws(expr, do_print=False)
     
         # set up prompt
         llm_message = f"""original input expression: {expr}
@@ -24,7 +24,7 @@ def prompt_engine_loop(og_expr, num_loops=2, do_print=True, debug=False):
         choices = ""
         choice_dict = {} # tracks the possible choices to choose from
         counter = 1
-        for law, expressions in laws_tuple.items():
+        for law, expressions in all_laws_applied.items():
             for expression in expressions:
                 choices += f"#{counter}., '{law}', '{expression}'\n"
                 choice_dict[str(counter)] = expression
@@ -66,6 +66,7 @@ def prompt_engine_loop(og_expr, num_loops=2, do_print=True, debug=False):
 
         expr = new_expr
         proof_history.append(new_expr) # TODO: track what laws the LLM chose
+
     if do_print:
         print("***********FINAL PROOF***********")
         if debug: print(f"{proof_history=}")
@@ -83,11 +84,16 @@ if __name__ == '__main__':
     if args.expr:
         expr = args.expr
     else:
+        # TODO: these should be test cases
+        # expr = "(a or (a and b)) => a"              # TAUTOLOGY
+        # expr = "not((a or (a and b)) => a)"         # NOT TAUTOLOGY
+        # expr = "((not b) and (a => b)) => (not a)"  # TAUTOLOGY
+        # expr = "(x and y) or (x and y)"             # TAUTOLOGY
         expr = "(x and x) or (x and x)"
     
     if args.num_steps:
         num_steps = int(args.num_steps)
     else:
         num_steps = 2
-        
-    prompt_engine_loop(expr, num_loops=num_steps)
+
+    prompt_engine_loop(expr, max_num_steps=num_steps)

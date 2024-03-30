@@ -44,20 +44,6 @@ def apply_all_laws(expr, do_print=False):
   output : defaultdict(<class 'list'>, {'Commutative Law': ['(x and y or x and y)', '(y and x or x and y)', '(y and x or y and x)'], 'Distributive Law': ['((y and x or y) and (y and x or x))']})
   """
 
-  # ----------EXAMPLE INPUTS-----------
-
-  # expr = "((not(x or y) and z) or True) <-> z"             # --> (not z and (not (z and (not x and not y)) and not True) or z and 1)
-  # expr = "(not(x and not(y)) or ((not(y) and z))) and z"   # --> (z and (z and not y or (not x or not not y)))
-  # expr = "(x and y) or (x and y)"                          # --> (y and x or y and x)
-  # expr = "((not x or not not not y) or z)"                 # --> (z or ((not y) or not x))
-  # expr = "a or b"                                          # --> (b or a)
-  # expr = "(b and b)"
-  # expr = "(b or b)"
-  # expr = "((b and a) or (b and a))"
-  # expr = "(a and b) and c"                                 # --> (c and (b and a))
-  # expr = "a or (b and c)"                                  # --> (c and b or a)
-  # expr = "p or (p and q)"                                  # --> (q and p or p)
-
   # ----------CREATE AST-----------
 
   bTree = booleanTree(expr)
@@ -232,5 +218,20 @@ def apply_all_laws(expr, do_print=False):
   if do_print: print("output :",new_expressions)
   return new_expressions
 
-if __name__ == '__main__':
-  apply_all_laws("(x and y) or (x and y)", do_print=True)
+if __name__ == '__main__':  
+  # ----------EXAMPLE INPUTS-----------
+  # expr = "((not(x or y) and z) or True) <-> z"             # --> (not z and (not (z and (not x and not y)) and not True) or z and 1)
+  # expr = "(not(x and not(y)) or ((not(y) and z))) and z"   # --> (z and (z and not y or (not x or not not y)))
+  # expr = "(x and y) or (x and y)"                          # --> (y and x or y and x)
+  # expr = "((not x or not not not y) or z)"                 # --> (z or ((not y) or not x))
+  # expr = "a or b"                                          # --> (b or a)
+  # expr = "(b and b)"
+  # expr = "(b or b)"
+  # expr = "((b and a) or (b and a))"
+  # expr = "(a and b) and c"                                 # --> (c and (b and a))
+  # expr = "a or (b and c)"                                  # --> (c and b or a)
+  # expr = "p or (p and q)"                                  # --> (q and p or p)
+  # expr  = "not (a or (a and b)) or a"
+  expr = "(x and y) or (x and y)"
+  apply_all_laws(expr, do_print=True)
+    

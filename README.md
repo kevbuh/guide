@@ -21,10 +21,9 @@ pip install -r requirements.txt
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete writing the logic for the implication and bi-conditional laws
-    - [ ] reducing laws like Zero and One Law, Identity Law
+    - [ ] complete simplifications laws like "Zero and One" Law, Identity Law, double negation
     - [ ] fix idempotent bug
     - [ ] simplify AST at each step
-    - [ ] write tests
 - [x] Build prompt engine
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
@@ -36,6 +35,7 @@ pip install -r requirements.txt
     - [x] integrate original repo
     - [ ] Set up boolean task
     - [ ] Option for GPT-3.5 Turbo or Claude-3 Haiku
+- [ ] write tests
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
 
