@@ -20,8 +20,9 @@ pip install -r requirements.txt
 - [x] Build symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
-    - [ ] complete writing the logic for the implication and bi-conditional laws
-    - [ ] complete simplifications laws like "Zero and One" Law, Identity Law, double negation
+    - [ ] complete all logical rules
+        - [ ] implication and bi-conditional laws
+        - [ ] simplifications laws like "Zero and One" Law, Identity Law, double negation
     - [ ] fix idempotent bug
     - [ ] simplify AST at each step
 - [x] Build prompt engine
@@ -35,7 +36,7 @@ pip install -r requirements.txt
     - [x] integrate original repo
     - [ ] Set up boolean task
     - [ ] Option for GPT-3.5 Turbo or Claude-3 Haiku
-- [ ] write tests
+- [ ] Write tests
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
 
@@ -49,7 +50,7 @@ python3 guide/prompt_engine.py --expr="(x and x) or (x and x)"
 ```
 
 Output
-```bash
+```
 Loading API keys...make sure to set them up in a .env file
 
 ***PROOF STEP #1***
@@ -128,7 +129,7 @@ $$ T: \text{TRUE}$$
 
 $$ F: \text{FALSE}$$
 
-$$ \\&: \text{AND}$$
+$$ \\: \text{AND}$$
 
 $$ |: \text{OR}$$
 
