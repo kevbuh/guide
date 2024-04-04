@@ -9,11 +9,11 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     
     for i in range(max_num_steps):
         if do_print:
-            print(f"\n*********PROOF STEP #{i+1}*********\n")
+            print(f"\n----------PROOF STEP #{i+1}----------\n")
             print(f"CURRENT EXPR: {expr}")
 
         if expr in ["True", "False", "1", "0", "x", "y"]: # can determine if tautology or not
-            print(f"Expression '{expr}' cannot be further applied onto laws")
+            print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
         all_laws_applied = apply_all_laws(expr, do_print=False)
@@ -40,11 +40,10 @@ My choice: #?. (? law)"""
         haiku_text = haiku_res.content[0].text
 
         if do_print:
-            print("\n-------------Prompt-------------")
-            print(llm_message)
-            print("----------LLM Response-----------\n")
-            print(haiku_text)
-            print("---------------------------------")
+            print("\nPrompt:")
+            print("'''" + llm_message + "'''")
+            print("\nLLM Response:")
+            print("'''" + haiku_text + "'''")
 
         # search for choice selection
         pattern = r"My choice: #(\d+)\."
@@ -72,11 +71,12 @@ My choice: #?. (? law)"""
         law_history.append(new_law)
 
     if do_print:
-        print("***********FINAL PROOF***********")
+        print("----------FINAL PROOF----------")
         if debug: print(f"{proof_history=}")
         proof_steps = []
-        for proof, law in zip(proof_history, law_history):
-            proof_steps.append(f"{proof:35} {law}") # TODO: Fix spacing
+        for i, (proof, law) in enumerate(zip(proof_history, law_history)):
+            if i == 0: proof_steps.append(f"{proof:35}   {law}")
+            else: proof_steps.append(f"{proof:35} {law}")
         proof_steps.append(proof_history[-1]) # add last step (e.g. simply just 'x')
         formatted_proof = "Proof:\n" + "\n≡ ".join(proof_steps)
         print(formatted_proof)
@@ -89,27 +89,17 @@ if __name__ == '__main__':
     parser.add_argument("--expr", type=str, help="The expression to evaluate")
     parser.add_argument("--num_steps", type=str, help="Num of proof steps")
     parser.add_argument("--debug", action='store_true', help="Boolean to print debug statement")
-
     args = parser.parse_args()
 
-    if args.expr:
-        expr = args.expr
-    else:
-        # TODO: these should be test cases
-        # expr = "(a or (a and b)) => a"              # TAUTOLOGY
-        # expr = "not((a or (a and b)) => a)"         # NOT TAUTOLOGY
-        # expr = "((not b) and (a => b)) => (not a)"  # TAUTOLOGY
-        # expr = "(x and y) or (x and y)"             # TAUTOLOGY
-        expr = "(x and x) or (x and x)"
+    # TODO: these should be test cases
+    # expr = "(a or (a and b)) => a"              # TAUTOLOGY
+    # expr = "not((a or (a and b)) => a)"         # NOT TAUTOLOGY
+    # expr = "((not b) and (a => b)) => (not a)"  # TAUTOLOGY
+    # expr = "(x and y) or (x and y)"             # TAUTOLOGY
+    # expr = "(x and x) or (x and x)"
     
-    if args.num_steps:
-        num_steps = int(args.num_steps)
-    else:
-        num_steps = 2
-
-    if args.debug:
-        debug = True
-    else:
-        debug = False
+    expr = args.expr if args.expr else "(x and x) or (x and x)"
+    num_steps = int(args.num_steps) if args.num_steps else 5
+    debug = bool(args.debug)
 
     prompt_engine_loop(expr, max_num_steps=num_steps, debug=debug)

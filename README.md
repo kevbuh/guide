@@ -13,7 +13,7 @@ Logical equivalence symbolic engine guided by tree-of-thoughts
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-# in .env file add line of: ANTHROPIC_API_KEY=<your-api-key-here>
+# ANTHROPIC_API_KEY=<your-api-key-here> (add this into .env file)
 ```
 
 ## Roadmap
@@ -37,7 +37,7 @@ pip install -r requirements.txt
     - [x] integrate original repo
     - [ ] Set up boolean task
     - [ ] Option for GPT-3.5 Turbo or Claude-3 Haiku
-- [ ] Write tests
+- [ ] Write testcases
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
 
@@ -54,12 +54,12 @@ Output
 ```
 Loading API keys...make sure to set them up in a .env file
 
-*********PROOF STEP #1*********
+----------PROOF STEP #1----------
 
 CURRENT EXPR: (x and x) or (x and x)
 
--------------Prompt-------------
-original input expression: (x and x) or (x and x)
+Prompt:
+'''original input expression: (x and x) or (x and x)
 Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best.#0., 'Commutative Law', '(x and x or x and x)'
 #1., 'Commutative Law', '(x and x or x and x)'
 #2., 'Commutative Law', '(x and x or x and x)'
@@ -68,27 +68,26 @@ Choose one of the following that you think will best help you solve if this stat
 #5., 'Idempotent Law', '(x or x)'
 #6., 'Idempotent Law', '(x or x)'
 Respond with your best output like this at the VERY end:
-My choice: #?. (? law)
-----------LLM Response-----------
+My choice: #?. (? law)'''
 
-To determine if the given expression, (x and x) or (x and x), is a tautology, the Idempotent Law would be the most helpful.
+LLM Response:
+'''To determine if the given expression, (x and x) or (x and x), is a tautology, the Idempotent Law would be the most helpful.
 
-The Idempotent Law states that for any proposition p, p ∨ p = p and p ∧ p = p. In other words, the logical operations of conjunction (and) and disjunction (or) with the same operand result in the same operand.
+The Idempotent Law states that for any proposition P, P and P is equivalent to P, and P or P is equivalent to P. In other words, the expression (x and x) is equivalent to x, and the expression (x or x) is equivalent to x.
 
-Applying the Idempotent Law, we can simplify the expression as follows:
-(x and x) or (x and x) = x and x = x
+Applying the Idempotent Law to the original expression, we get:
+(x and x) or (x and x) = x or x = x
 
-Since the simplified expression is simply x, which is always true, the original expression is a tautology.
+Since the expression simplifies to x, which is a tautology, the original expression (x and x) or (x and x) is also a tautology.
 
-My choice: #4. (Idempotent Law)
----------------------------------
+My choice: #4. (Idempotent Law)'''
 
-*********PROOF STEP #2*********
+----------PROOF STEP #2----------
 
 CURRENT EXPR: (x and x or x)
 
--------------Prompt-------------
-original input expression: (x and x or x)
+Prompt:
+'''original input expression: (x and x or x)
 Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best.#0., 'Commutative Law', '(x or x and x)'
 #1., 'Commutative Law', '(x or x and x)'
 #2., 'Distributive Law', '((x or x) and (x or x))'
@@ -96,23 +95,31 @@ Choose one of the following that you think will best help you solve if this stat
 #4., 'Idempotent Law', '(x and x)'
 #5., 'Idempotent Law', 'x'
 Respond with your best output like this at the VERY end:
-My choice: #?. (? law)
-----------LLM Response-----------
+My choice: #?. (? law)'''
 
-To determine if the given expression "(x and x or x)" is a tautology, the most relevant logical law would be the Idempotent Law.
+LLM Response:
+'''To determine if the given expression, (x and x or x), is a tautology, the Idempotent Law would be the most helpful logical law.
 
-The Idempotent Law states that for any proposition x, the following two equations hold:
+The Idempotent Law states that for any proposition x, the following are true:
+
 x and x = x
 x or x = x
 
 Applying the Idempotent Law to the given expression, we get:
-(x and x or x) = (x or x) = x
 
-Since the expression simplifies to just 'x', it is a tautology, meaning it is always true for any value of x.
+(x and x or x)
+= (x or x)
+= x
 
-My choice: #5. (Idempotent Law)
----------------------------------
-***********FINAL PROOF***********
+Since the expression simplifies to just x, it is a tautology, meaning it is always true regardless of the value of x.
+
+My choice: #5. (Idempotent Law)'''
+
+----------PROOF STEP #3----------
+
+CURRENT EXPR: x
+Expression 'x' cannot be further applied onto laws
+----------FINAL PROOF----------
 Proof:
 (x and x) or (x and x)                Idempotent Law
 ≡ (x and x or x)                      Idempotent Law
