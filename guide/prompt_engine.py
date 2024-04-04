@@ -5,10 +5,11 @@ from symbolic import apply_all_laws
 def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     expr = og_expr
     proof_history=[og_expr]
+    law_history = []
     
     for i in range(max_num_steps):
         if do_print:
-            print(f"\n***PROOF STEP #{i+1}***\n")
+            print(f"\n*********PROOF STEP #{i+1}*********\n")
             print(f"CURRENT EXPR: {expr}")
 
         if expr in ["True", "False", "1", "0", "x", "y"]: # can determine if tautology or not
@@ -19,19 +20,19 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     
         # set up prompt
         llm_message = f"""original input expression: {expr}
-        Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best."""
+Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best."""
 
         choices = ""
         choice_dict = {} # tracks the possible choices to choose from
-        counter = 1
+        counter = 0
         for law, expressions in all_laws_applied.items():
             for expression in expressions:
                 choices += f"#{counter}., '{law}', '{expression}'\n"
-                choice_dict[str(counter)] = expression
+                choice_dict[str(counter)] = (expression, law)
                 counter += 1
         llm_message += choices
         best_choice_example = """Respond with your best output like this at the VERY end:
-        My choice: #?. (? law)"""
+My choice: #?. (? law)"""
         llm_message += best_choice_example
 
         # sent message to haiku and collect its text response
@@ -43,20 +44,22 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
             print(llm_message)
             print("----------LLM Response-----------\n")
             print(haiku_text)
+            print("---------------------------------")
 
         # search for choice selection
         pattern = r"My choice: #(\d+)\."
         match = re.search(pattern, haiku_text)
         if match:
             choice_number = match.group(1) # just select what the LLM chose and not the one from the example
-            if do_print: print(f"LLM CHOSE OPTION #{choice_number}")
+            # if do_print: print(f"LLM CHOSE OPTION #{choice_number}")
         else:
             print("ERROR: Choice number not found in the response.")
             exit(0)
 
         # send choice back to symbolic engine
         assert choice_number, "ERROR: Choice number not found"
-        new_expr = choice_dict[choice_number]
+        new_expr = choice_dict[choice_number][0]
+        new_law = choice_dict[choice_number][1]
 
         if debug:
             print(f"{choice_dict=}")
@@ -65,13 +68,19 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
             print(f"{new_expr=}")
 
         expr = new_expr
-        proof_history.append(new_expr) # TODO: track what laws the LLM chose
+        proof_history.append(new_expr) 
+        law_history.append(new_law)
 
     if do_print:
         print("***********FINAL PROOF***********")
         if debug: print(f"{proof_history=}")
-        formatted_proof = "Proof:\n" + "\n≡ ".join(proof_history)
+        proof_steps = []
+        for proof, law in zip(proof_history, law_history):
+            proof_steps.append(f"{proof:35} {law}") # TODO: Fix spacing
+        proof_steps.append(proof_history[-1]) # add last step (e.g. simply just 'x')
+        formatted_proof = "Proof:\n" + "\n≡ ".join(proof_steps)
         print(formatted_proof)
+
     return proof_history
 
 if __name__ == '__main__':
@@ -79,6 +88,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Prompt engine CLI args")
     parser.add_argument("--expr", type=str, help="The expression to evaluate")
     parser.add_argument("--num_steps", type=str, help="Num of proof steps")
+    parser.add_argument("--debug", action='store_true', help="Boolean to print debug statement")
+
     args = parser.parse_args()
 
     if args.expr:
@@ -96,4 +107,9 @@ if __name__ == '__main__':
     else:
         num_steps = 2
 
-    prompt_engine_loop(expr, max_num_steps=num_steps)
+    if args.debug:
+        debug = True
+    else:
+        debug = False
+
+    prompt_engine_loop(expr, max_num_steps=num_steps, debug=debug)
