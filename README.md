@@ -30,9 +30,9 @@ pip install -r requirements.txt
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
     - [x] complete loop from llm choice back to prompt engine
-    - [ ] track entire history of selections
+    - [x] track entire history of selections
         - [x] expressions
-        - [ ] laws it chose
+        - [x] laws it chose
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
     - [ ] Set up boolean task
