@@ -92,9 +92,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # TODO: these should be test cases
-    # expr = "(a or (a and b)) => a"              # TAUTOLOGY
-    # expr = "not((a or (a and b)) => a)"         # NOT TAUTOLOGY
-    # expr = "((not b) and (a => b)) => (not a)"  # TAUTOLOGY
+    # CK's examples
+    # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
+    # expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
+    # expr = "not((a or (a and b)) -> a)"         # NOT TAUTOLOGY
+    # expr = "(((y and x) or x) and y)"           # NOT TAUTOLOGY
+
+    # Simple examples
     # expr = "(x and y) or (x and y)"             # TAUTOLOGY
     # expr = "(x and x) or (x and x)"
     

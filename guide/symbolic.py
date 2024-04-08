@@ -154,7 +154,7 @@ def apply_all_laws(expr, do_print=False):
               if do_print: print(f" - Applying Distributive Law 2: {expr} = {modified_code[:-1]}")
 
   # Absorption Law
-  for node in walk(parsed_code):  
+  for node in walk(parsed_code):
       match node:
           case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]):                                      
               if t_util.are_subtrees_equivalent(a, objects[0]): 
@@ -232,6 +232,17 @@ if __name__ == '__main__':
   # expr = "a or (b and c)"                                  # --> (c and b or a)
   # expr = "p or (p and q)"                                  # --> (q and p or p)
   # expr  = "not (a or (a and b)) or a"
-  expr = "(x and y) or (x and y)"
+    
+  # expr = "(x and y) or (x and y)"
+  # expr = "(((y and x) or x) and y)"
+  # expr = "((x or (x and y)) and y)"
+
+  import argparse
+  parser = argparse.ArgumentParser(description="Symbolic engine CLI args")
+  parser.add_argument("--expr", type=str, help="The expression to evaluate")
+  args = parser.parse_args()
+
+  expr = args.expr if args.expr else "(x and x) or (x and x)"
+
   apply_all_laws(expr, do_print=True)
     
