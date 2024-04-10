@@ -18,14 +18,6 @@ pip install -r requirements.txt
 
 ## Roadmap
 
-- [x] Build symbolic engine
-    - [x] expression to AST representation
-    - [x] implement common laws on the AST
-    - [ ] complete all logical rules
-        - [ ] implication and bi-conditional laws
-        - [ ] simplifications laws like "Zero and One" Law, Identity Law, double negation
-    - [ ] fix idempotent bug
-    - [ ] simplify AST at each step
 - [x] Build prompt engine
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
@@ -33,6 +25,12 @@ pip install -r requirements.txt
     - [x] track entire history of selections
         - [x] expressions
         - [x] laws it chose
+- [] Build symbolic engine
+    - [x] expression to AST representation
+    - [x] implement common laws on the AST
+    - [ ] complete implication and bi-conditional laws
+    - [ ] fix idempotent bug
+    - [ ] simplify AST at each step
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
     - [ ] Set up boolean task
