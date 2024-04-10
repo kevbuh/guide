@@ -153,7 +153,26 @@ def apply_all_laws(expr, do_print=False):
               new_expressions["Distributive Law"].append(modified_code[:-1])
               if do_print: print(f" - Applying Distributive Law 2: {expr} = {modified_code[:-1]}")
 
-  # Absorption Law
+  # DeMorgan's Law 
+  for node in walk(parsed_code): 
+      match node:
+          case UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b])):                                             
+              new_node = BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
+              replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+              modified_code = astor.to_source(replaced_tree)
+              new_expressions["DeMorgan Law"].append(modified_code[:-1])
+              if do_print: print(f" - Applying DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
+
+  for node in walk(parsed_code): 
+      match node:
+          case UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b])):                                            
+              new_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
+              replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+              modified_code = astor.to_source(replaced_tree)
+              new_expressions["DeMorgan Law"].append(modified_code[:-1])
+              if do_print: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
+
+  # Absorption Law, NOTE: doesn't work for (a and (a or b))
   for node in walk(parsed_code):
       match node:
           case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]):                                      
@@ -174,26 +193,7 @@ def apply_all_laws(expr, do_print=False):
                   new_expressions["Absorption Law"].append(modified_code[:-1])
                   if do_print: print(f" - Applying Absorption Law 2: {expr} = {modified_code[:-1]}")
 
-  # DeMorgan's Law 
-  for node in walk(parsed_code): 
-      match node:
-          case UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b])):                                             
-              new_node = BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
-              replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-              modified_code = astor.to_source(replaced_tree)
-              new_expressions["DeMorgan Law"].append(modified_code[:-1])
-              if do_print: print(f" - Applying DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
-
-  for node in walk(parsed_code): 
-      match node:
-          case UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b])):                                            
-              new_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
-              replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-              modified_code = astor.to_source(replaced_tree)
-              new_expressions["DeMorgan Law"].append(modified_code[:-1])
-              if do_print: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
-
-  # Idempotent Law - NOTE: should apply idemptent to ((x and y) or (x and y)) and reduce to (x and y), but it doesn't.
+  # Idempotent Law - NOTE: doesn't work for ((x and y) or (x and y)). should reduce to (x and y)
   for node in walk(parsed_code): 
       match node:
           case BoolOp(op=Or(), values=[*objects]):                                                                    
@@ -241,7 +241,6 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Symbolic engine CLI args")
   parser.add_argument("--expr", type=str, help="The expression to evaluate")
   args = parser.parse_args()
-
   expr = args.expr if args.expr else "(x and x) or (x and x)"
 
   apply_all_laws(expr, do_print=True)

@@ -25,7 +25,7 @@ pip install -r requirements.txt
     - [x] track entire history of selections
         - [x] expressions
         - [x] laws it chose
-- [] Build symbolic engine
+- [ ] Build symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete implication and bi-conditional laws
