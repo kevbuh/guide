@@ -14,6 +14,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 # ANTHROPIC_API_KEY=<your-api-key-here> (add this into .env file)
+# OPENAI_API_KEY=<your-api-key-here> (add this into .env file)
 ```
 
 ## Roadmap
@@ -31,17 +32,17 @@ pip install -r requirements.txt
     - [ ] complete implication and bi-conditional laws
     - [ ] fix idempotent bug
     - [ ] simplify AST at each step
-- [ ] boolean tree of thoughts
+- [ ] Symbolic tree of thoughts
     - [x] integrate original repo
-    - [x] Option for GPT-3.5 Turbo or Claude-3 Haiku
-    - [ ] Set up boolean task
+    - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
+    - [ ] set up symbolic logic task
 - [ ] Write testcases
-- [ ] Set up experiment suite to track model performances
+- [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
 
 ## Example usage
 
-Looks like the system works for simple expressions! This example uses ((x and x) or (x and x)) below (output not deterministic).
+Looks like the system works for simple expressions!
 
 Command
 ```bash
@@ -151,7 +152,7 @@ $$ A \downarrow B: \text{NOR} $$
 $$ A \odot B: \text{XNOR} $$
 
 
-## Common Logic Laws
+## Symbolic Logic Laws
 
 1. **Commutative Law**:
    - $A \land B = B \land A$
@@ -192,50 +193,49 @@ $$ A \odot B: \text{XNOR} $$
 10. **Double Negation (Involution) Law**:
     - $\lnot (\lnot A) = A$
 
-11. **Exclusive OR (XOR) Properties**:
-    - $A \oplus B = (A \land \lnot B) \lor (\lnot A \land B)$
-    - $A \oplus B = (A \lor B) \land \lnot (A \land B)$
-    - $A \oplus 0 = A$
-    - $A \oplus A = 0$
-
-12. **Implication Transformation**:
+11. **Implication Transformation**:
     - $A \Rightarrow B = \lnot A \lor B$
 
-13. **NAND and NOR Laws**:
-    - $A \uparrow B = \lnot(A \land B)$
-    - $A \downarrow B = \lnot(A \lor B)$
-
-14. **Exclusive NOR (XNOR) Properties**:
-    - $A \oplus B = \lnot(A \oplus B)$
-    - $A \odot B = (A \land B) \lor (\lnot A \land \lnot B)$
-
-16. **Consensus Theorem**:
+12. **Consensus Theorem**:
     - $(A \land B) \lor (\lnot A \land C) \lor (B \land C) = (A \land B) \lor (\lnot A \land C)$
 
-17. **Consensus Law**:
-    - Removes a term when covered by a consensus
+13. **Consensus Law**:
     - $(A \land B) \lor (\lnot B \land C) \lor (A \land C) = (A \land B) \lor (\lnot B \land C)$
 
-18. **Adjacency Law**:
-    - Simplifies expressions involving adjacent terms in a Karnaugh map or truth table
+14. **Adjacency Law**:
     - $(A \land B) \lor (A \land \lnot B) = A$
 
-19. **Simplification Law**:
+15. **Simplification Law**:
     - $(A \lor B) \land (A \lor \lnot B) = A$
 
-20. **Implication Laws**:
+16. **Implication Laws**:
     - $A \Rightarrow B = \lnot A \lor B$
     - $\lnot (A \Rightarrow B) = A \land \lnot B$
 
-21. **Biconditional (iff) Laws**:
+17. **Biconditional (iff) Laws**:
     - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$
     - $\lnot (A \Leftrightarrow B) = A \oplus B$
 
+<!-- 11. **Exclusive OR (XOR) Properties**:
+    - $A \oplus B = (A \land \lnot B) \lor (\lnot A \land B)$
+    - $A \oplus B = (A \lor B) \land \lnot (A \land B)$
+    - $A \oplus 0 = A$
+    - $A \oplus A = 0$ -->
+
+<!-- 13. **NAND and NOR Laws**:
+    - $A \uparrow B = \lnot(A \land B)$
+    - $A \downarrow B = \lnot(A \lor B)$ -->
+
+<!-- 14. **Exclusive NOR (XNOR) Properties**:
+    - $A \oplus B = \lnot(A \oplus B)$
+    - $A \odot B = (A \land B) \lor (\lnot A \land \lnot B)$ -->
+
 ## Bug tracker
 
-- Absorption Law doesn't trigger for "(a and (a or b))"
-- Absorption Law doesn't trigger for "(a or (a and b)) -> a"
-- Absorption Law doesn't trigger for "not((a or (a and b)) -> a)"
-- Absorption Law doesn't trigger for "(((y and x) or x) and y)"
-- Absorption Law doesn't trigger for "((x or (x and y)) and y)"
-- Idempotent Law doesn't work for ((x and y) or (x and y))
+- Symbolic Engine
+    - Absorption Law doesn't trigger for "(a and (a or b))"
+    - Absorption Law doesn't trigger for "(a or (a and b)) -> a"
+    - Absorption Law doesn't trigger for "not((a or (a and b)) -> a)"
+    - Absorption Law doesn't trigger for "(((y and x) or x) and y)"
+    - Absorption Law doesn't trigger for "((x or (x and y)) and y)"
+    - Idempotent Law doesn't work for ((x and y) or (x and y))

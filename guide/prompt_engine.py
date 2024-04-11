@@ -35,21 +35,21 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
         llm_message += """Respond with your best output like this at the VERY end:
 My choice: #?. (? law)"""
 
-        # sent message to haiku and collect its text response
-        haiku_res = llm_api_call(llm_message)
-        haiku_text = haiku_res.content[0].text
+        # sent message to llm and collect its text response
+        llm_res = llm_api_call(llm_message)
+        llm_text = llm_res.content[0].text
 
         if do_print:
             print("\nPrompt:")
             print("'''" + llm_message + "'''")
             print("\nLLM Response:")
-            print("'''" + haiku_text + "'''")
+            print("'''" + llm_text + "'''")
 
-        # search for choice selection
+        # search for LLM choice selection
         pattern = r"My choice: #(\d+)\."
-        match = re.search(pattern, haiku_text)
+        match = re.search(pattern, llm_text)
         if match:
-            choice_number = match.group(1) # just select what the LLM chose and not the one from the example
+            choice_number = match.group(1) # capture the LLM choice 
         else:
             print("ERROR: Choice number not found in the response.")
             exit(0)
