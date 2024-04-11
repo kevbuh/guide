@@ -1,6 +1,7 @@
 import re
-from llm import haiku_message
+from llm import llm_api_call
 from symbolic import apply_all_laws
+from prompts import llm_message_v1
 
 def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     expr = og_expr
@@ -18,10 +19,7 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
         
         all_laws_applied = apply_all_laws(expr, do_print=False)
     
-        # set up prompt
-        llm_message = f"""original input expression: {expr}
-Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best."""
-
+        # output law and expression in a numbered list
         choices = ""
         choice_dict = {} # tracks the possible choices to choose from
         counter = 0
@@ -30,13 +28,15 @@ Choose one of the following that you think will best help you solve if this stat
                 choices += f"#{counter}., '{law}', '{expression}'\n"
                 choice_dict[str(counter)] = (expression, law)
                 counter += 1
+
+        # set up prompt
+        llm_message = llm_message_v1.format(expr=expr)
         llm_message += choices
-        best_choice_example = """Respond with your best output like this at the VERY end:
+        llm_message += """Respond with your best output like this at the VERY end:
 My choice: #?. (? law)"""
-        llm_message += best_choice_example
 
         # sent message to haiku and collect its text response
-        haiku_res = haiku_message(llm_message)
+        haiku_res = llm_api_call(llm_message)
         haiku_text = haiku_res.content[0].text
 
         if do_print:
@@ -50,7 +50,6 @@ My choice: #?. (? law)"""
         match = re.search(pattern, haiku_text)
         if match:
             choice_number = match.group(1) # just select what the LLM chose and not the one from the example
-            # if do_print: print(f"LLM CHOSE OPTION #{choice_number}")
         else:
             print("ERROR: Choice number not found in the response.")
             exit(0)
