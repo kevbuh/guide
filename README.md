@@ -33,8 +33,8 @@ pip install -r requirements.txt
     - [ ] simplify AST at each step
 - [ ] boolean tree of thoughts
     - [x] integrate original repo
+    - [x] Option for GPT-3.5 Turbo or Claude-3 Haiku
     - [ ] Set up boolean task
-    - [ ] Option for GPT-3.5 Turbo or Claude-3 Haiku
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performances
 - [ ] Start experimenting with how to improve ToT
@@ -230,3 +230,12 @@ $$ A \odot B: \text{XNOR} $$
 21. **Biconditional (iff) Laws**:
     - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$
     - $\lnot (A \Leftrightarrow B) = A \oplus B$
+
+## Bug tracker
+
+- Absorption Law doesn't trigger for "(a and (a or b))"
+- Absorption Law doesn't trigger for "(a or (a and b)) -> a"
+- Absorption Law doesn't trigger for "not((a or (a and b)) -> a)"
+- Absorption Law doesn't trigger for "(((y and x) or x) and y)"
+- Absorption Law doesn't trigger for "((x or (x and y)) and y)"
+- Idempotent Law doesn't work for ((x and y) or (x and y))

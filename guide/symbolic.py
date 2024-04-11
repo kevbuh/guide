@@ -219,29 +219,10 @@ def apply_all_laws(expr, do_print=False):
   return new_expressions
 
 if __name__ == '__main__':  
-  # ----------EXAMPLE INPUTS-----------
-  # expr = "((not(x or y) and z) or True) <-> z"             # --> (not z and (not (z and (not x and not y)) and not True) or z and 1)
-  # expr = "(not(x and not(y)) or ((not(y) and z))) and z"   # --> (z and (z and not y or (not x or not not y)))
-  # expr = "(x and y) or (x and y)"                          # --> (y and x or y and x)
-  # expr = "((not x or not not not y) or z)"                 # --> (z or ((not y) or not x))
-  # expr = "a or b"                                          # --> (b or a)
-  # expr = "(b and b)"
-  # expr = "(b or b)"
-  # expr = "((b and a) or (b and a))"
-  # expr = "(a and b) and c"                                 # --> (c and (b and a))
-  # expr = "a or (b and c)"                                  # --> (c and b or a)
-  # expr = "p or (p and q)"                                  # --> (q and p or p)
-  # expr  = "not (a or (a and b)) or a"
-    
-  # expr = "(x and y) or (x and y)"
-  # expr = "(((y and x) or x) and y)"
-  # expr = "((x or (x and y)) and y)"
-
   import argparse
   parser = argparse.ArgumentParser(description="Symbolic engine CLI args")
   parser.add_argument("--expr", type=str, help="The expression to evaluate")
   args = parser.parse_args()
   expr = args.expr if args.expr else "(x and x) or (x and x)"
-
   apply_all_laws(expr, do_print=True)
     

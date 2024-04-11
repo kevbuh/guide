@@ -1,30 +1,45 @@
 import os
-import anthropic
 from dotenv import load_dotenv
-
-print("Loading API keys...make sure to set them up in a .env file")
-load_dotenv()
-api_key = os.getenv('ANTHROPIC_API_KEY') # set up keys in a .env file
-client = anthropic.Anthropic(api_key=api_key)
-
-def haiku_message(message: str, system=""):
+def llm_api_call(message:str, system="", claude=True):
     assert message != "", "haiku_message ERR: Message should not be null"
-    res = client.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=1000,
-        temperature=0.7,
-        system=system,
-        messages=[
-            {"role": "user", "content": message}
-        ]
-    )
-    return res
+    if claude:
+        import anthropic
+        load_dotenv()
+        api_key = os.getenv('ANTHROPIC_API_KEY') # set up keys in a .env file
+        client = anthropic.Anthropic(api_key=api_key)
+        res = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=1000,
+            temperature=0.7,
+            system=system,
+            messages=[
+                {"role": "user", "content": message}
+            ]
+        )
+        return res
+    else: 
+        import openai
+        load_dotenv()
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key != "": openai.api_key = api_key
+        else: 
+            print("ERR: OPENAI_API_KEY is not set")
+            exit(0)
+        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": system},{"role": "user", "content": message}])
+        res = completion.choices[0].message.content
+        return res
 
 if __name__ == '__main__':
-    res2 = haiku_message("((not(x or y) and z) or True) <-> z")
-    print(res2) 
-    # below is what haiku responded with
+    import argparse
+    parser = argparse.ArgumentParser(description="LLM CLI args")
+    parser.add_argument("--gpt", action='store_true', help="Use OpenAI GPT-3.5-turbo instead of Claude 3 Haiku")
+    args = parser.parse_args()
+
+    res = llm_api_call("((not(x or y) and z) or True) <-> z", claude=not args.gpt)
+    print(res) 
+
     """
+    Haiku example response:
     Message(id='msg_01H6C9fXicQGgYidinRFZhzN', content=[ContentBlock(text=
 
     'The given expression is:
