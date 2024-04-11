@@ -26,13 +26,13 @@ class ReplaceVisitor(NodeTransformer):
         if node == self.original_node:
             return self.replacement_node
         return self.generic_visit(node)
-    
-def apply_all_laws(expr, to_print=False):
-  """
-  Collects all logical prompts for each logical law 
 
-  Input: Binary Expression                                            <class 'str'>
-  Output: Key item pairs of law and list of its possible deductions   <class 'dict_items'>
+def symbolic_deduce(expr, to_print=False):
+  """
+  Creates logical expressions for each logical law 
+
+  Input:  symbolic expression                                         <class 'str'>
+  Output: key-item pairs of law and list of its possible deductions   <class 'dict_items'>
 
   Example:
   input  : (x and y) or (x and y)
@@ -224,5 +224,5 @@ if __name__ == '__main__':
   parser.add_argument("--expr", type=str, help="The expression to evaluate")
   args = parser.parse_args()
   expr = args.expr if args.expr else "(x and x) or (x and x)"
-  apply_all_laws(expr, to_print=True)
+  symbolic_deduce(expr, to_print=True)
     

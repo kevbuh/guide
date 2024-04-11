@@ -1,11 +1,12 @@
 import re
 from llm import llm
-from symbolic import apply_all_laws
+from symbolic import symbolic_deduce
 from prompts import propose_prompt, output_prompt
 
 terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
-def cot_solve(og_expr, max_num_steps=3, to_print=True, debug=False):
+def solve_cot(og_expr, max_num_steps=3, to_print=True, debug=False):
+    # naive chain of thought (CoT) proof solver
     expr = og_expr
     proof_history=[og_expr]
     law_history = []
@@ -18,7 +19,7 @@ def cot_solve(og_expr, max_num_steps=3, to_print=True, debug=False):
             print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
-        all_laws_applied = apply_all_laws(expr, to_print=False)
+        all_laws_applied = symbolic_deduce(expr, to_print=False)
     
         # output law and expression in a numbered list
         choices = ""
@@ -82,21 +83,20 @@ def cot_solve(og_expr, max_num_steps=3, to_print=True, debug=False):
 
     return proof_history
 
-def prompt_engine_loop(og_expr, max_num_steps=3, to_print=True, debug=False, naive=True):
+# TODO: make a function to spit out current proof so far
+
+def solve_tot():
+    actions = ["ANALYZE"]
+    reward = []
+    pass
+
+def prompt_engine_loop(expr, max_num_steps=3, to_print=True, debug=False, naive=True):
     if naive: # naive chain of thought 
-        cot_solve(og_expr, max_num_steps, to_print, debug)
-    else:
-        # tot
-        pass
+        solve_cot(expr, max_num_steps, to_print, debug)
+    else: # tree of thoughts
+        solve_tot()
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description="Prompt engine CLI args")
-    parser.add_argument("--expr", type=str, help="The expression to evaluate")
-    parser.add_argument("--num_steps", type=str, help="Num of proof steps")
-    parser.add_argument("--debug", action='store_true', help="Boolean to print debug statement")
-    args = parser.parse_args()
-
     # TODO: these should be test cases
     # CK's examples
     # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
@@ -107,7 +107,14 @@ if __name__ == '__main__':
     # Simple examples
     # expr = "(x and y) or (x and y)"             # TAUTOLOGY
     # expr = "(x and x) or (x and x)"
-    
+
+    import argparse
+    parser = argparse.ArgumentParser(description="Prompt engine CLI args")
+    parser.add_argument("--expr", type=str, help="The expression to evaluate")
+    parser.add_argument("--num_steps", type=str, help="Num of proof steps")
+    parser.add_argument("--debug", action='store_true', help="Boolean to print debug statement")
+    args = parser.parse_args()
+
     expr = args.expr if args.expr else "(x and x) or (x and x)"
     num_steps = int(args.num_steps) if args.num_steps else 5
     debug = bool(args.debug)
