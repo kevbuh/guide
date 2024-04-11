@@ -1,17 +1,16 @@
 import re
 from llm import llm
 from symbolic import apply_all_laws
-from prompts import llm_prompt, output_prompt
+from prompts import propose_prompt, output_prompt
 
 terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
-def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
+def cot_solve(og_expr, max_num_steps=3, to_print=True, debug=False):
     expr = og_expr
     proof_history=[og_expr]
     law_history = []
-    
     for i in range(max_num_steps):
-        if do_print:
+        if to_print:
             print(f"\n----------PROOF STEP #{i+1}----------\n")
             print(f"CURRENT EXPR: {expr}")
 
@@ -19,7 +18,7 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
             print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
-        all_laws_applied = apply_all_laws(expr, do_print=False)
+        all_laws_applied = apply_all_laws(expr, to_print=False)
     
         # output law and expression in a numbered list
         choices = ""
@@ -32,7 +31,7 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
                 counter += 1
 
         # create prompt
-        llm_message = llm_prompt.format(expr=expr)
+        llm_message = propose_prompt.format(expr=expr)
         llm_message += choices
         llm_message += output_prompt
 
@@ -40,14 +39,14 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
         llm_res = llm(llm_message)
         llm_text = llm_res.content[0].text.strip()
 
-        if do_print:
+        if to_print:
             print("\nPrompt:")
             print("'''" + llm_message + "'''")
             print("\nLLM Response:")
             print("'''" + llm_text + "'''")
 
         # search for LLM choice selection
-        pattern = r"My choice: #(\d+)\."
+        pattern = r"LLM CHOICE: #(\d+)\."
         match = re.search(pattern, llm_text)
         if match:
             choice_number = match.group(1) # capture the LLM choice 
@@ -70,7 +69,7 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
         proof_history.append(new_expr) 
         law_history.append(new_law)
 
-    if do_print:
+    if to_print:
         print("----------FINAL PROOF----------")
         if debug: print(f"{proof_history=}")
         proof_steps = []
@@ -82,6 +81,13 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
         print(formatted_proof)
 
     return proof_history
+
+def prompt_engine_loop(og_expr, max_num_steps=3, to_print=True, debug=False, naive=True):
+    if naive: # naive chain of thought 
+        cot_solve(og_expr, max_num_steps, to_print, debug)
+    else:
+        # tot
+        pass
 
 if __name__ == '__main__':
     import argparse

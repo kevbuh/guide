@@ -31,7 +31,7 @@ pip install -r requirements.txt
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete implication and bi-conditional laws
-    - [ ] fix idempotent bug
+    - [ ] fix expression bugs (below in bug tracker)
     - [ ] simplify AST at each step
 - [ ] Symbolic tree of thoughts
     - [x] integrate original repo
@@ -123,24 +123,25 @@ Proof:
 ≡ (x and x or x)                      Idempotent Law
 ≡ x
 ```
+## Symbolic Logic
 
-## Symbols
+### *Notation*
 
-$ T: \text{TRUE}$
+<!-- $T: \text{TRUE}$ -->
 
-$ F: \text{FALSE}$
+<!-- $F: \text{FALSE}$ -->
 
-$ \land: \text{AND}$
+$\land: \text{AND}$
 
-$ \lor: \text{OR}$
+$\lor: \text{OR}$
 
-$ \lnot : \text{NOT}$
+$\lnot : \text{NOT}$
 
-$ \equiv: \text{Equivalence}$
+$\equiv: \text{Equivalence}$
 
-$ \Rightarrow: \text{Implication}$
+$\Rightarrow: \text{Implication}$
 
-$ \Leftrightarrow: \text{Bi-Conditional}$
+$\Leftrightarrow: \text{Bi-Conditional}$
 
 <!-- $$ \\{a\dots z\\}: \text{Expression} $$ -->
 
@@ -149,9 +150,7 @@ $ \Leftrightarrow: \text{Bi-Conditional}$
 <!-- $$ A \downarrow B: \text{NOR} $$ -->
 
 <!-- $$ A \odot B: \text{XNOR} $$ -->
-
-
-## Symbolic Logic Laws
+### *Laws*
 
 1. **Commutative Law**:
    - $A \land B = B \land A$

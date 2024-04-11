@@ -54,8 +54,20 @@ def get_proposals():
 def get_samples():
     pass
 
-def solve():
-    pass
+def solve(expr, args, idx, to_print=True): # tot solver
+    print("expr=", expr)
+    ys = [''] # current output candidates
+    infos = []
 
-def naive_solve():
+    for step in range(args.steps):
+        print(f"step: {step}")
+
+        # generation
+        if args.method_generate == 'propose':
+            new_ys = [get_proposals(expr, y) for y in ys]
+        elif args.method_generate == 'sample':
+            pass
+
+
+def naive_solve(): # cot solver
     pass
