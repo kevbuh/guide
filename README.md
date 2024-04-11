@@ -13,8 +13,9 @@ Logical equivalence symbolic engine guided by tree-of-thoughts
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-# ANTHROPIC_API_KEY=<your-api-key-here> (add this into .env file)
-# OPENAI_API_KEY=<your-api-key-here> (add this into .env file)
+# Add these lines into a .env file
+# ANTHROPIC_API_KEY=<your-api-key-here>
+# OPENAI_API_KEY=<your-api-key-here>
 ```
 
 ## Roadmap
@@ -51,8 +52,6 @@ python3 guide/prompt_engine.py --expr="(x and x) or (x and x)"
 
 Output
 ```
-Loading API keys...make sure to set them up in a .env file
-
 ----------PROOF STEP #1----------
 
 CURRENT EXPR: (x and x) or (x and x)
@@ -70,14 +69,16 @@ Respond with your best output like this at the VERY end:
 My choice: #?. (? law)'''
 
 LLM Response:
-'''To determine if the given expression, (x and x) or (x and x), is a tautology, the Idempotent Law would be the most helpful.
+'''To determine if the given expression (x and x) or (x and x) is a tautology, the Idempotent Law would be the most helpful logical law.
 
-The Idempotent Law states that for any proposition P, P and P is equivalent to P, and P or P is equivalent to P. In other words, the expression (x and x) is equivalent to x, and the expression (x or x) is equivalent to x.
+The Idempotent Law states that for any proposition p, the following are true:
+p and p = p
+p or p = p
 
-Applying the Idempotent Law to the original expression, we get:
-(x and x) or (x and x) = x or x = x
+Applying the Idempotent Law to the given expression, we get:
+(x and x) or (x and x) = (x) or (x) = x
 
-Since the expression simplifies to x, which is a tautology, the original expression (x and x) or (x and x) is also a tautology.
+Since the expression simplifies to just 'x', it is a tautology, meaning it is always true regardless of the value of x.
 
 My choice: #4. (Idempotent Law)'''
 
@@ -97,20 +98,17 @@ Respond with your best output like this at the VERY end:
 My choice: #?. (? law)'''
 
 LLM Response:
-'''To determine if the given expression, (x and x or x), is a tautology, the Idempotent Law would be the most helpful logical law.
+'''To determine if the given expression "(x and x or x)" is a tautology, the best logical law to apply is the Idempotent Law.
 
 The Idempotent Law states that for any proposition x, the following are true:
-
 x and x = x
 x or x = x
 
 Applying the Idempotent Law to the given expression, we get:
-
-(x and x or x)
-= (x or x)
+(x and x or x) = (x or x)
 = x
 
-Since the expression simplifies to just x, it is a tautology, meaning it is always true regardless of the value of x.
+Since the expression simplifies to just "x", it is a tautology, as it is always true regardless of the value of x.
 
 My choice: #5. (Idempotent Law)'''
 
@@ -118,6 +116,7 @@ My choice: #5. (Idempotent Law)'''
 
 CURRENT EXPR: x
 Expression 'x' cannot be further applied onto laws
+
 ----------FINAL PROOF----------
 Proof:
 (x and x) or (x and x)                Idempotent Law
@@ -127,29 +126,29 @@ Proof:
 
 ## Symbols
 
-$$ T: \text{TRUE}$$
+$ T: \text{TRUE}$
 
-$$ F: \text{FALSE}$$
+$ F: \text{FALSE}$
 
-$$ \\: \text{AND}$$
+$ \land: \text{AND}$
 
-$$ |: \text{OR}$$
+$ \lor: \text{OR}$
 
-$$ \sim : \text{NOT}$$
+$ \lnot : \text{NOT}$
 
-$$ \equiv: \text{Equivalence}$$
+$ \equiv: \text{Equivalence}$
 
-$$ \rightarrow: \text{Implication}$$
+$ \Rightarrow: \text{Implication}$
 
-$$ \leftrightarrow: \text{Bi-Conditional}$$
+$ \Leftrightarrow: \text{Bi-Conditional}$
 
-$$ \\{a\dots z\\}: \text{Expression} $$
+<!-- $$ \\{a\dots z\\}: \text{Expression} $$ -->
 
-$$ A \uparrow B: \text{NAND} $$
+<!-- $$ A \uparrow B: \text{NAND} $$ -->
 
-$$ A \downarrow B: \text{NOR} $$
+<!-- $$ A \downarrow B: \text{NOR} $$ -->
 
-$$ A \odot B: \text{XNOR} $$
+<!-- $$ A \odot B: \text{XNOR} $$ -->
 
 
 ## Symbolic Logic Laws
@@ -171,8 +170,8 @@ $$ A \odot B: \text{XNOR} $$
    - $A \lor 0 = A$; $A \lor 1 = 1$
 
 5. **Negation Law**:
-   - $A \land \lnot A = 0$ (contradiction)
-   - $A \lor \lnot A = 1$ (tautology)
+   - $A \land \lnot A = 0$
+   - $A \lor \lnot A = 1$
 
 6. **Idempotent Law**:
    - $A \land A = A$
@@ -214,7 +213,7 @@ $$ A \odot B: \text{XNOR} $$
 
 17. **Biconditional (iff) Laws**:
     - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$
-    - $\lnot (A \Leftrightarrow B) = A \oplus B$
+    <!-- - $\lnot (A \Leftrightarrow B) = A \oplus B$ -->
 
 <!-- 11. **Exclusive OR (XOR) Properties**:
     - $A \oplus B = (A \land \lnot B) \lor (\lnot A \land B)$

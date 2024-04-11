@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-def llm_api_call(message:str, system="", claude=True):
+def llm(message:str, system="", claude=True):
     assert message != "", "haiku_message ERR: Message should not be null"
     if claude:
         import anthropic
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpt", action='store_true', help="Use OpenAI GPT-3.5-turbo instead of Claude 3 Haiku")
     args = parser.parse_args()
 
-    res = llm_api_call("((not(x or y) and z) or True) <-> z", claude=not args.gpt)
+    res = llm("((not(x or y) and z) or True) <-> z", claude=not args.gpt)
     print(res) 
 
     """

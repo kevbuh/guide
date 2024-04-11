@@ -1,7 +1,9 @@
 import re
-from llm import llm_api_call
+from llm import llm
 from symbolic import apply_all_laws
-from prompts import llm_message_v1
+from prompts import llm_prompt, output_prompt
+
+terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
 def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
     expr = og_expr
@@ -13,7 +15,7 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
             print(f"\n----------PROOF STEP #{i+1}----------\n")
             print(f"CURRENT EXPR: {expr}")
 
-        if expr in ["True", "False", "1", "0", "x", "y"]: # can determine if tautology or not
+        if expr in terminal_values: # can determine if tautology or not
             print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
@@ -29,15 +31,14 @@ def prompt_engine_loop(og_expr, max_num_steps=3, do_print=True, debug=False):
                 choice_dict[str(counter)] = (expression, law)
                 counter += 1
 
-        # set up prompt
-        llm_message = llm_message_v1.format(expr=expr)
+        # create prompt
+        llm_message = llm_prompt.format(expr=expr)
         llm_message += choices
-        llm_message += """Respond with your best output like this at the VERY end:
-My choice: #?. (? law)"""
+        llm_message += output_prompt
 
-        # sent message to llm and collect its text response
-        llm_res = llm_api_call(llm_message)
-        llm_text = llm_res.content[0].text
+        # send message to llm and collect its text response
+        llm_res = llm(llm_message)
+        llm_text = llm_res.content[0].text.strip()
 
         if do_print:
             print("\nPrompt:")
