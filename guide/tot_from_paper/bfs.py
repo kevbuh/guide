@@ -1,8 +1,8 @@
 import itertools
 import numpy as np
 from functools import partial
-from tot.models import gpt
-from tot.prompts_game24 import *
+from tot_from_paper.models import gpt
+from tot_from_paper.prompts_game24 import *
 
 def get_value(task, x, y, n_evaluate_sample, cache_value=True):
     value_prompt = task.value_prompt_wrap(x, y) # value_last_step_prompt = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Given an input and an answer, give a judgement (sure/impossible) if the answer is correct, i.e. it uses each input exactly once and no other numbers, and reach 24.

@@ -5,9 +5,9 @@ import os
 import sympy
 import pandas as pd
 
-from tot.base import Task, DATA_PATH
-from tot.game24 import * 
-from tot.prompts_game24 import *
+from tot_from_paper.base import Task, DATA_PATH
+from tot_from_paper.game24 import * 
+from tot_from_paper.prompts_game24 import *
 
 
 def get_current_numbers(y: str) -> str:

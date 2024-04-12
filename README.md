@@ -20,23 +20,24 @@ pip install -r requirements.txt
 
 ## Roadmap
 
-- [x] Build prompt engine
+- [x] Build proof engine
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
     - [x] complete loop from llm choice back to prompt engine
     - [x] track entire history of selections
         - [x] expressions
         - [x] laws it chose
+    - [ ] prune identical proofs
 - [ ] Build symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete implication and bi-conditional laws
     - [ ] fix expression bugs (below in bug tracker)
     - [ ] simplify AST at each step
-- [ ] Symbolic tree of thoughts
+- [x] Symbolic tree of thoughts
     - [x] integrate original repo
     - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
-    - [ ] set up symbolic logic task
+    - [ ] use value evaluation and prune
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
@@ -45,12 +46,81 @@ pip install -r requirements.txt
 
 Looks like the system works for simple expressions!
 
-Command
+<!-- Command
 ```bash
-python3 guide/prompt_engine.py --expr="(x and x) or (x and x)"
+python3 guide/proof_engine.py --expr="(x and x) or (x and x)"
+``` -->
+
+Command
+
+Uses gpt-3.5-turbo and tree of thoughts
+
+```bash
+python3 guide/proof_engine.py --expr="(x and x) or (x and x)" --gpt --tot
 ```
 
 Output
+```
+USING TREE OF THOUGHT
+T:1/3
+new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+new_expr='((x and x or x) and (x and x or x))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+T:2/3
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='((x or x) and (x or x))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+new_expr='((((x or x) and (x or x)) and x or ((x or x) and (x or x))) and (((x or x) and\n    (x or x)) and x or x and x))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))'], law_history=['Distributive Law']
+new_expr='(((x or x and x) and x or (x or x and x)) and ((x or x and x) and x or x and x)\n    )', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))'], law_history=['Distributive Law']
+new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))'], law_history=['Distributive Law']
+T:3/3
+Expression 'x' cannot be further applied onto laws
+
+new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '((x or x) and (x or x))'], law_history=['Idempotent Law', 'Distributive Law']
+new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '((x or x) and (x or x))'], law_history=['Idempotent Law', 'Distributive Law']
+new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '((x or x) and (x or x))'], law_history=['Idempotent Law', 'Distributive Law']
+Expression 'x' cannot be further applied onto laws
+
+Expression 'x' cannot be further applied onto laws
+
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+new_expr='((((x and x or x) and (x and x or ((x or x) and x or (x or x) and x))) and\n    (((x or x) and x or (x or x)) and ((x or x) and x or x)) or ((x and x or\n    x) and (x and x or ((x or x) and x or (x or x) and x)))) and (((x and x or\n    x) and (x and x or ((x or x) and x or (x or x) and x))) and (((x or x) and\n    x or (x or x)) and ((x or x) and x or x)) or x and (((x or x) and x or\n    (x or x)) and ((x or x) and x or x))))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '((((x or x) and (x or x)) and x or ((x or x) and (x or x))) and (((x or x) and\n    (x or x)) and x or x and x))'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='(((x and x or x and ((x or x) and x or (x or x) and x)) and ((x or x) and x or\n    (x or x) and x) or (x and x or x and ((x or x) and x or (x or x) and x)\n    )) and ((x and x or x and ((x or x) and x or (x or x) and x)) and ((x or\n    x) and x or (x or x) and x) or x and ((x or x) and x or (x or x) and x)))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '((((x or x) and (x or x)) and x or ((x or x) and (x or x))) and (((x or x) and\n    (x or x)) and x or x and x))'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='(((x and x or x and ((x or x) and x or (x or x) and x)) and ((x or x) and x or\n    (x or x) and x) or (x and x or x and ((x or x) and x or (x or x) and x)\n    )) and ((x and x or x and ((x or x) and x or (x or x) and x)) and ((x or\n    x) and x or (x or x) and x) or x and ((x or x) and x or (x or x) and x)))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '((((x or x) and (x or x)) and x or ((x or x) and (x or x))) and (((x or x) and\n    (x or x)) and x or x and x))'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='(((x or (x and (x and x) or x) and (x and (x and x) or x)) and x or (x or (\n    x and (x and x) or x) and (x and (x and x) or x))) and ((x or (x and (x and\n    x) or x) and (x and (x and x) or x)) and x or (x or (x and (x and x) or\n    x) and (x and (x and x) or x))))', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(((x or x and x) and x or (x or x and x)) and ((x or x and x) and x or x and x)\n    )'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='((x and x or (x and x or x) and x) and ((x and x or x) or x and (x and x or x))\n    )', new_law='Commutative Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(((x or x and x) and x or (x or x and x)) and ((x or x and x) and x or x and x)\n    )'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='((x and x or x and (x and x or x)) and (x and x) or (x and x or x and (x and\n    x or x)) and (x or x and (x and x or x)))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(((x or x and x) and x or (x or x and x)) and ((x or x and x) and x or x and x)\n    )'], law_history=['Distributive Law', 'Distributive Law']
+new_expr='((x or x) and (x or x))', new_law='Distributive Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(x and x or x)'], law_history=['Distributive Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(x and x or x)'], law_history=['Distributive Law', 'Idempotent Law']
+new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '((x and x or x) and (x and x or x))', '(x and x or x)'], law_history=['Distributive Law', 'Idempotent Law']
+----------FINAL PROOF----------
+Proof:
+(x and x) or (x and x)                Idempotent Law
+≡ (x and x or x)                      Idempotent Law
+≡ x
+----------FINAL PROOF----------
+#1
+Proof:
+(x and x) or (x and x)                Idempotent Law
+≡ (x and x or x)                      Idempotent Law
+≡ x
+----------FINAL PROOF----------
+#2
+Proof:
+(x and x) or (x and x)                Idempotent Law
+≡ (x and x or x)                      Idempotent Law
+≡ x
+```
+
+<!-- Output
 ```
 ----------PROOF STEP #1----------
 
@@ -122,7 +192,8 @@ Proof:
 (x and x) or (x and x)                Idempotent Law
 ≡ (x and x or x)                      Idempotent Law
 ≡ x
-```
+``` -->
+
 ## Symbolic Logic
 
 ### *Notation*
