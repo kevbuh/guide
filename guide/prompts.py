@@ -6,7 +6,7 @@ output_prompt = """Respond with your best output like this at the VERY end:
 LLM CHOICE: #?. (? law)"""
 
 # TODO: finish valuing states.
-value_prompt = """Value this expression on a scale from 1-10 based on how well you think it will help simplify the expression.
-Expressions to grade: {expr}
-Response like this:
+value_prompt = """Value this expression on a scale from 1-10 based on how easy it is to simplify the expression. Just respond with a number and not a fraction.
+Expression to grade: {expr}
+Respond like this:
 LLM GRADE: ???"""

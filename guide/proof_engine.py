@@ -1,7 +1,7 @@
 import re
 from llm import llm
 from symbolic import symbolic_deduce
-from prompts import propose_prompt, output_prompt
+from prompts import propose_prompt, output_prompt, value_prompt
 from copy import copy
 # from tot import solve_tot
 
@@ -33,8 +33,8 @@ def get_llm_choice(llm_text, choice_dict, llm_message, use_gpt=True):
         new_law = choice_dict[choice_number][1]
         return choice_number, new_expr, new_law 
     else:
+        # TODO: set max limit of retries
         print("ERROR: Choice number not found in the response.")
-        # TODO: retry until selection so it doesn't error out
         print("Couldn't find number...retrying")
         llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
         return get_llm_choice(llm_res, choice_dict, llm_message, use_gpt)
@@ -91,6 +91,48 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False, use_gpt=True)
     formatted_proof = get_formatted_proof(proof_history, law_history)
     return proof_history, formatted_proof
 
+def get_llm_value(llm_text, llm_message, use_gpt=True):
+    """search for LLM value and send choice back"""
+    match = re.search(r'\d+', llm_text)
+    if match:
+        value = int(match.group(0)) # capture the LLM value 
+        return value
+    else:
+        print("ERROR: Choice number not found in the response.")
+        print("Couldn't find number...retrying")
+        # TODO: set max limit of retries
+        llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
+        return get_llm_choice(llm_res, llm_message, use_gpt)
+
+def get_value(expr, expr_history, use_gpt):
+    # TODO: add expr_history for more accurate value ratings
+    # TODO: make LLM selection global
+    prompt = value_prompt.format(expr=expr)
+    llm_res = llm(message=prompt, claude=not use_gpt)
+    value = get_llm_value(llm_res, prompt)
+    return value
+
+def evaluate_tree(q, use_gpt):
+    values = []
+    local_value_cache = {}
+
+    for (expr, expr_history, law_history) in q:
+        if expr in local_value_cache:  # avoid duplicate candidates
+            value = 0
+        else:
+            value = get_value(expr, expr_history, use_gpt=use_gpt)
+            local_value_cache[expr] = value
+        values.append(value)
+    return values
+
+def prune_tree(values, q, K):
+    # TODO: can def optimize this func
+    len_q = len(values)
+    if len_q <= K: return q
+    print(f"pruning {len_q-K} leaves...")
+    sorted_nodes = sorted(zip(values, q), key=lambda x: x[0], reverse=True)
+    sorted_q = [node[1] for node in sorted_nodes[:K]]
+    return sorted_q
 
 def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True): 
     """
@@ -108,6 +150,10 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True):
     for t in range(T): # each level
         print(f"Level:{t+1}/{T}")
         new_q = []
+        
+        values = evaluate_tree(q, use_gpt)
+        q = prune_tree(values, q, K)
+
         for item in q: # go through each thought on level
             expr_i, expr_history, law_history = item
 
@@ -119,7 +165,6 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True):
             expr_deductions = symbolic_deduce(expr_i, verbose=False) 
 
             for i in range(B): 
-                # TODO: value each expr_i and prune to K
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
                 llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
                 choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message, use_gpt)

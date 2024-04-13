@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 def llm(message, system="", claude=False):
     assert message != "", "ERROR: llm() 'message' param should not be null"
+    # print("LLM API CALL")
     if claude:
         import anthropic
         load_dotenv()
