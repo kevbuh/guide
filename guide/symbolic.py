@@ -27,7 +27,7 @@ class ReplaceVisitor(NodeTransformer):
             return self.replacement_node
         return self.generic_visit(node)
 
-def symbolic_deduce(expr, to_print=False):
+def symbolic_deduce(expr, verbose=False):
   """
   Creates logical expressions for each logical law 
 
@@ -52,8 +52,8 @@ def symbolic_deduce(expr, to_print=False):
   parsed_code = bTree.parseTree
   new_expressions = defaultdict(list)
 
-  if to_print: print("input  :", expr)
-  if to_print: print("detail :")
+  if verbose: print("input  :", expr)
+  if verbose: print("detail :")
 
   # ----------APPLY LAWS ONTO AST ONE AT A TIME-----------
 
@@ -65,7 +65,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Identity Law"].append(modified_code[:-1]) # -1 to get rid of new line
-              if to_print: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
               
   # Domination Law
   for node in walk(parsed_code): 
@@ -75,7 +75,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Domination Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Domination Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Domination Law: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -84,7 +84,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Domination Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Domination Law 2: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Domination Law 2: {expr} = {modified_code[:-1]}")
 
   # Double Negation Law 
   for node in walk(parsed_code): 
@@ -94,7 +94,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Double Negation Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Double Negation Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Double Negation Law: {expr} = {modified_code[:-1]}")
 
   # Commutative Law
   for node in walk(parsed_code): 
@@ -104,7 +104,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Commutative Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Commutative Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Commutative Law: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -113,7 +113,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Commutative Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Commutative Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Commutative Law: {expr} = {modified_code[:-1]}")
 
   # Associative Law
   for node in walk(parsed_code): 
@@ -123,7 +123,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Associative Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Associative Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Associative Law: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -132,7 +132,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Associative Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Associative Law 2: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Associative Law 2: {expr} = {modified_code[:-1]}")
 
   # Distributive Law
   for node in walk(parsed_code): 
@@ -142,7 +142,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Distributive Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Distributive Law: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Distributive Law: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -151,7 +151,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["Distributive Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying Distributive Law 2: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying Distributive Law 2: {expr} = {modified_code[:-1]}")
 
   # DeMorgan's Law 
   for node in walk(parsed_code): 
@@ -161,7 +161,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["DeMorgan Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -170,7 +170,7 @@ def symbolic_deduce(expr, to_print=False):
               replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
               modified_code = astor.to_source(replaced_tree)
               new_expressions["DeMorgan Law"].append(modified_code[:-1])
-              if to_print: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
+              if verbose: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
 
   # Absorption Law, NOTE: doesn't work for (a and (a or b))
   for node in walk(parsed_code):
@@ -181,7 +181,7 @@ def symbolic_deduce(expr, to_print=False):
                   replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                   modified_code = astor.to_source(replaced_tree)
                   new_expressions["Absorption Law"].append(modified_code[:-1])
-                  if to_print: print(f" - Applying Absorption Law: {expr} = {modified_code[:-1]}")
+                  if verbose: print(f" - Applying Absorption Law: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -191,7 +191,7 @@ def symbolic_deduce(expr, to_print=False):
                   replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                   modified_code = astor.to_source(replaced_tree)
                   new_expressions["Absorption Law"].append(modified_code[:-1])
-                  if to_print: print(f" - Applying Absorption Law 2: {expr} = {modified_code[:-1]}")
+                  if verbose: print(f" - Applying Absorption Law 2: {expr} = {modified_code[:-1]}")
 
   # Idempotent Law - NOTE: doesn't work for ((x and y) or (x and y)). should reduce to (x and y)
   for node in walk(parsed_code): 
@@ -203,7 +203,7 @@ def symbolic_deduce(expr, to_print=False):
                   replaced_tree = ReplaceVisitor(node, new_node).visit(new_ast)
                   modified_code = astor.to_source(replaced_tree)
                   new_expressions["Idempotent Law"].append(modified_code[:-1])
-                  if to_print: print(f" - Applying Idempotent Law OR: {expr} = {modified_code[:-1]}")
+                  if verbose: print(f" - Applying Idempotent Law OR: {expr} = {modified_code[:-1]}")
 
   for node in walk(parsed_code): 
       match node:
@@ -213,9 +213,9 @@ def symbolic_deduce(expr, to_print=False):
                   replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                   modified_code = astor.to_source(replaced_tree)
                   new_expressions["Idempotent Law"].append(modified_code[:-1])
-                  if to_print: print(f" - Applying Idempotent Law AND: {expr} = {modified_code[:-1]}")
+                  if verbose: print(f" - Applying Idempotent Law AND: {expr} = {modified_code[:-1]}")
 
-  if to_print: print("output :",new_expressions)
+  if verbose: print("output :",new_expressions)
   return new_expressions
 
 if __name__ == '__main__':  
@@ -224,5 +224,5 @@ if __name__ == '__main__':
   parser.add_argument("--expr", type=str, help="The expression to evaluate")
   args = parser.parse_args()
   expr = args.expr if args.expr else "(x and x) or (x and x)"
-  symbolic_deduce(expr, to_print=True)
+  symbolic_deduce(expr, verbose=True)
     
