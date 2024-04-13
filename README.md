@@ -37,7 +37,7 @@ pip install -r requirements.txt
 - [x] Symbolic tree of thoughts
     - [x] integrate original repo
     - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
-    - [ ] use value evaluation and prune
+    - [x] use value evaluation and prune
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
