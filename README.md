@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 ## Roadmap
 
-- [x] Build proof engine
+- [x] Proof engine
     - [x] use the engine to collect all the logical prompts
     - [x] and feed it to the LM
     - [x] complete loop from llm choice back to prompt engine
@@ -28,28 +28,30 @@ pip install -r requirements.txt
         - [x] expressions
         - [x] laws it chose
     - [x] prune identical proofs
-- [ ] Build symbolic engine
+- [x] Tree of thoughts
+    - [x] integrate original repo
+    - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
+    - [x] use value evaluation and prune
+- [ ] Symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [ ] complete implication and bi-conditional laws
     - [ ] fix expression bugs (below in bug tracker)
     - [ ] simplify AST at each step
-- [x] Symbolic tree of thoughts
-    - [x] integrate original repo
-    - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
-    - [x] use value evaluation and prune
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
+    - [ ] Stop when found first proof
+    - [ ] add expr_history for more accurate value ratings
 
 ## Example usage
 
 Looks like the system works for simple expressions!
 
-Command: uses GPT-3.5-Turbo and tree of thoughts
+Command: uses GPT-3.5-Turbo and prints out process information. 
 
 ```bash
-python3 guide/proof_engine.py --expr="(x and x) or (x and x)" --gpt --verbose
+python3 guide/proof_engine.py --expr="(x and x) or (x and x)" --verbose
 ```
 
 Output

@@ -1,9 +1,8 @@
 import re
-from llm import llm
+from llm import llm_api_call
 from symbolic import symbolic_deduce
 from prompts import propose_prompt, output_prompt, value_prompt
-from copy import copy
-# from tot import solve_tot
+from functools import partial
 
 terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
@@ -22,7 +21,7 @@ def create_propose_prompt(expr, expr_deductions):
     llm_message += output_prompt
     return llm_message, choice_dict
 
-def get_llm_choice(llm_text, choice_dict, llm_message, use_gpt=True):
+def get_llm_choice(llm_text, choice_dict, llm_message):
     """search for LLM choice selection and send choice back to symbolic engine"""
     pattern = r"LLM CHOICE: #(\d+)\."
     match = re.search(pattern, llm_text)
@@ -34,10 +33,9 @@ def get_llm_choice(llm_text, choice_dict, llm_message, use_gpt=True):
         return choice_number, new_expr, new_law 
     else:
         # TODO: set max limit of retries
-        print("ERROR: Choice number not found in the response.")
-        print("Couldn't find number...retrying")
-        llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
-        return get_llm_choice(llm_res, choice_dict, llm_message, use_gpt)
+        print("Couldn't find LLM choice...retrying")
+        llm_res = llm(message=llm_message) # send message to llm and collect its text response
+        return get_llm_choice(llm_res, choice_dict, llm_message)
 
 def get_formatted_proof(proof_history, law_history, num=0):
     if num > 1: print(f"----------FINAL PROOF #{num}----------")
@@ -51,7 +49,7 @@ def get_formatted_proof(proof_history, law_history, num=0):
     print(formatted_proof)
     return formatted_proof
 
-def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False, use_gpt=True):
+def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
     # naive chain of thought (CoT) proof solver
     expr = og_expr
     proof_history=[og_expr]
@@ -67,7 +65,7 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False, use_gpt=True)
         
         expr_deductions = symbolic_deduce(expr, verbose=False) 
         llm_message, choice_dict = create_propose_prompt(expr, expr_deductions) # output law and expression in a numbered list and create prompt
-        llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
+        llm_res = llm(message=llm_message) # send message to llm and collect its text response
 
         if verbose:
             print("\nPrompt:")
@@ -76,7 +74,7 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False, use_gpt=True)
             print("'''" + llm_res + "'''")
 
         # search for LLM choice selection and send choice back to symbolic engine
-        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message, use_gpt)
+        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
 
         if debug:
             print(f"{choice_dict=}")
@@ -91,7 +89,7 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False, use_gpt=True)
     formatted_proof = get_formatted_proof(proof_history, law_history)
     return proof_history, formatted_proof
 
-def get_llm_value(llm_text, llm_message, use_gpt=True):
+def get_llm_value(llm_text, llm_message):
     """search for LLM value and send choice back"""
     match = re.search(r'\d+', llm_text)
     if match:
@@ -101,18 +99,18 @@ def get_llm_value(llm_text, llm_message, use_gpt=True):
         print("ERROR: Choice number not found in the response.")
         print("Couldn't find number...retrying")
         # TODO: set max limit of retries
-        llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
-        return get_llm_choice(llm_res, llm_message, use_gpt)
+        llm_res = llm(message=llm_message) # send message to llm and collect its text response
+        return get_llm_value(llm_res, llm_message)
 
-def get_value(expr, expr_history, use_gpt):
+def get_value(expr, expr_history):
     # TODO: add expr_history for more accurate value ratings
     # TODO: make LLM selection global
     prompt = value_prompt.format(expr=expr)
-    llm_res = llm(message=prompt, claude=not use_gpt)
+    llm_res = llm(message=prompt)
     value = get_llm_value(llm_res, prompt)
     return value
 
-def evaluate_tree(q, use_gpt):
+def evaluate_tree(q):
     values = []
     local_value_cache = {}
 
@@ -120,21 +118,19 @@ def evaluate_tree(q, use_gpt):
         if expr in local_value_cache:  # avoid duplicate candidates
             value = 0
         else:
-            value = get_value(expr, expr_history, use_gpt=use_gpt)
+            value = get_value(expr, expr_history)
             local_value_cache[expr] = value
         values.append(value)
     return values
 
 def prune_tree(values, q, K):
-    # TODO: can def optimize this func
-    len_q = len(values)
+    len_q = len(q)
     if len_q <= K: return q
     print(f"pruning {len_q-K} leaves...")
-    sorted_nodes = sorted(zip(values, q), key=lambda x: x[0], reverse=True)
-    sorted_q = [node[1] for node in sorted_nodes[:K]]
+    sorted_q = [node[1] for node in sorted(zip(values, q), key=lambda x: x[0], reverse=True)][:K]
     return sorted_q
 
-def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True): 
+def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
     """
     psuedo code params from paper:
 
@@ -151,7 +147,7 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True):
         print(f"Level:{t+1}/{T}")
         new_q = []
         
-        values = evaluate_tree(q, use_gpt)
+        values = evaluate_tree(q)
         q = prune_tree(values, q, K)
 
         for item in q: # go through each thought on level
@@ -166,8 +162,8 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True):
 
             for i in range(B): 
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
-                llm_res = llm(message=llm_message, claude=not use_gpt) # send message to llm and collect its text response
-                choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message, use_gpt)
+                llm_res = llm(message=llm_message) # send message to llm and collect its text response
+                choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
 
                 if verbose: print(f"{new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
                 
@@ -187,13 +183,13 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True, use_gpt=True):
 
     return q, formatted_proof
 
-def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False, use_gpt=True):
-    if naive: # naive chain of thought 
+def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
+    if naive:
         print("USING CHAIN OF THOUGHT")
-        solve_cot(expr, max_num_steps, verbose, debug, use_gpt)
-    else: # tree of thoughts
+        solve_cot(expr, max_num_steps, verbose, debug)
+    else: 
         print("USING TREE OF THOUGHT")
-        return solve_tot(expr, T=3, B=3, K=3, verbose=verbose, use_gpt=use_gpt)
+        return solve_tot(expr, T=3, B=3, K=3, verbose=verbose)
 
 if __name__ == '__main__':
     # TODO: these should be test cases
@@ -214,7 +210,7 @@ if __name__ == '__main__':
     parser.add_argument("--debug", action='store_true', help="Boolean to print debug statements")
     parser.add_argument("--verbose", action='store_true', help="Print out states at each step")
     parser.add_argument("--cot", action='store_true', help="Boolean to use Chain of Thought")
-    parser.add_argument("--gpt", action='store_true', help="Boolean to use GPT-3.5-Turbo")
+    parser.add_argument("--claude", action='store_true', help="Boolean to use Claude-3-Haiku")
 
     args = parser.parse_args()
 
@@ -222,10 +218,13 @@ if __name__ == '__main__':
     num_steps = int(args.num_steps) if args.num_steps else 5
     debug = bool(args.debug)
     cot = bool(args.cot)
-    gpt = bool(args.gpt)
+    claude = bool(args.claude)
     verbose = bool(args.verbose)
 
-    if gpt: print("Using GPT-3.5-Turbo")
-    else: print("Using Claude-3-Haiku")
+    global llm
+    llm = partial(llm_api_call, model="gpt-3.5-turbo" if not claude else "claude-3-haiku")
 
-    proof_engine(expr, max_num_steps=num_steps, verbose=verbose, debug=debug, naive=cot, use_gpt=gpt)
+    if claude: print("Using Claude-3-Haiku")
+    else: print("Using GPT-3.5-Turbo")
+
+    proof_engine(expr, max_num_steps=num_steps, verbose=verbose, debug=debug, naive=cot)
