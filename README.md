@@ -51,45 +51,40 @@ Looks like the system works for simple expressions!
 Command: uses GPT-3.5-Turbo and prints out process information. 
 
 ```bash
-python3 guide/proof_engine.py --expr="(x and x) or (x and x)" --verbose
+python3 guide/proof_engine.py --verbose
 ```
 
 Output
 ```
+SOLVING '(x and x) or (x and x)'...
+
 Using GPT-3.5-Turbo
 USING TREE OF THOUGHT
 Level:1/3
-new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
-new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
-new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+DETAIL: new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+DETAIL: new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
+DETAIL: new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
 Level:2/3
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-new_expr='(x and (x or x))', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
 Level:3/3
+pruning 6 leaves...
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
 Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and (x or x))'], law_history=['Idempotent Law', 'Idempotent Law']
-new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and (x or x))'], law_history=['Idempotent Law', 'Idempotent Law']
-new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and (x or x))'], law_history=['Idempotent Law', 'Idempotent Law']
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
+Removing non-unique proof
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
 ----------FINAL PROOF----------
-Proof:
-(x and x) or (x and x)                Idempotent Law
-≡ (x or x)                            Idempotent Law
-≡ x
-----------FINAL PROOF #2----------
 Proof:
 (x and x) or (x and x)                Idempotent Law
 ≡ (x and x or x)                      Idempotent Law

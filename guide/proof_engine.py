@@ -8,17 +8,20 @@ terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
 def create_propose_prompt(expr, expr_deductions):
     """output law and expression in a numbered list and create prompt"""
-    choices = ""
-    choice_dict = {} # tracks the possible choices to choose from
+    choices_list = []
+    choice_dict = {}  # Tracks the possible choices to choose from
     counter = 0
+
     for law, expressions in expr_deductions.items():
         for expression in expressions:
-            choices += f"#{counter}., '{law}', '{expression}'\n"
+            choice = f"#{counter}. '{law}', '{expression}'\n"
+            choices_list.append(choice)
             choice_dict[str(counter)] = (expression, law)
             counter += 1
-    llm_message = propose_prompt.format(expr=expr)
-    llm_message += choices
-    llm_message += output_prompt
+
+    choices = "".join(choices_list)
+    llm_message = f"{expr}\n{choices}{output_prompt}"
+
     return llm_message, choice_dict
 
 def get_llm_choice(llm_text, choice_dict, llm_message):
@@ -36,6 +39,47 @@ def get_llm_choice(llm_text, choice_dict, llm_message):
         print("Couldn't find LLM choice...retrying")
         llm_res = llm(message=llm_message) # send message to llm and collect its text response
         return get_llm_choice(llm_res, choice_dict, llm_message)
+    
+def get_llm_value(llm_text, llm_message):
+    """search for LLM value and send choice back"""
+    match = re.search(r'\d+', llm_text)
+    if match:
+        value = int(match.group(0)) # capture the LLM value 
+        return value
+    else:
+        print("ERROR: Choice number not found in the response.")
+        print("Couldn't find number...retrying")
+        # TODO: set max limit of retries
+        llm_res = llm(message=llm_message) # send message to llm and collect its text response
+        return get_llm_value(llm_res, llm_message)
+    
+
+def get_value(expr, expr_history):
+    # TODO: add expr_history for more accurate value ratings
+    # TODO: make LLM selection global
+    prompt = value_prompt.format(expr=expr)
+    llm_res = llm(message=prompt)
+    value = get_llm_value(llm_res, prompt)
+    return value
+
+def evaluate_tree(q):
+    values = []
+    local_value_cache = {}
+    for (expr, expr_history, law_history) in q:
+        if expr in local_value_cache:  # avoid duplicate candidates
+            value = 0
+        else:
+            value = get_value(expr, expr_history)
+            local_value_cache[expr] = value
+        values.append(value)
+    return values
+
+def prune_tree(values, q, K):
+    len_q = len(q)
+    if len_q <= K: return q
+    print(f"pruning {len_q-K} leaves...")
+    sorted_q = [node[1] for node in sorted(zip(values, q), key=lambda x: x[0], reverse=True)][:K]
+    return sorted_q
 
 def get_formatted_proof(proof_history, law_history, num=0):
     if num > 1: print(f"----------FINAL PROOF #{num}----------")
@@ -48,6 +92,8 @@ def get_formatted_proof(proof_history, law_history, num=0):
     formatted_proof = "Proof:\n" + "\n≡ ".join(proof_steps)
     print(formatted_proof)
     return formatted_proof
+
+# ---------------solvers---------------
 
 def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
     # naive chain of thought (CoT) proof solver
@@ -89,47 +135,6 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
     formatted_proof = get_formatted_proof(proof_history, law_history)
     return proof_history, formatted_proof
 
-def get_llm_value(llm_text, llm_message):
-    """search for LLM value and send choice back"""
-    match = re.search(r'\d+', llm_text)
-    if match:
-        value = int(match.group(0)) # capture the LLM value 
-        return value
-    else:
-        print("ERROR: Choice number not found in the response.")
-        print("Couldn't find number...retrying")
-        # TODO: set max limit of retries
-        llm_res = llm(message=llm_message) # send message to llm and collect its text response
-        return get_llm_value(llm_res, llm_message)
-
-def get_value(expr, expr_history):
-    # TODO: add expr_history for more accurate value ratings
-    # TODO: make LLM selection global
-    prompt = value_prompt.format(expr=expr)
-    llm_res = llm(message=prompt)
-    value = get_llm_value(llm_res, prompt)
-    return value
-
-def evaluate_tree(q):
-    values = []
-    local_value_cache = {}
-
-    for (expr, expr_history, law_history) in q:
-        if expr in local_value_cache:  # avoid duplicate candidates
-            value = 0
-        else:
-            value = get_value(expr, expr_history)
-            local_value_cache[expr] = value
-        values.append(value)
-    return values
-
-def prune_tree(values, q, K):
-    len_q = len(q)
-    if len_q <= K: return q
-    print(f"pruning {len_q-K} leaves...")
-    sorted_q = [node[1] for node in sorted(zip(values, q), key=lambda x: x[0], reverse=True)][:K]
-    return sorted_q
-
 def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
     """
     psuedo code params from paper:
@@ -155,7 +160,9 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
 
             if expr_i in terminal_values or len(expr_i) == 1: # to determine if tautology or not
                 print(f"Fully reduced expression, proof done.")
-                if item not in unique_proofs: unique_proofs.append(item)
+                if item not in unique_proofs: 
+                    print("Removing non-unique proof")
+                    unique_proofs.append(item)
                 continue
             
             expr_deductions = symbolic_deduce(expr_i, verbose=False) 
@@ -165,7 +172,7 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
                 llm_res = llm(message=llm_message) # send message to llm and collect its text response
                 choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
 
-                if verbose: print(f"{new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
+                if verbose: print(f"DETAIL: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
                 
                 # update structures
                 expr_history_new = expr_history + [new_expr]
@@ -205,26 +212,24 @@ if __name__ == '__main__':
 
     import argparse
     parser = argparse.ArgumentParser(description="Prompt engine CLI args")
-    parser.add_argument("--expr", type=str, help="The expression to evaluate")
-    parser.add_argument("--num_steps", type=str, help="Num of proof steps")
+    parser.add_argument("--expr", type=str, default="(x and x) or (x and x)", help="The expression to evaluate")
+    parser.add_argument("--num_steps", type=int, default=5, help="Number of proof steps")
     parser.add_argument("--debug", action='store_true', help="Boolean to print debug statements")
     parser.add_argument("--verbose", action='store_true', help="Print out states at each step")
     parser.add_argument("--cot", action='store_true', help="Boolean to use Chain of Thought")
     parser.add_argument("--claude", action='store_true', help="Boolean to use Claude-3-Haiku")
-
     args = parser.parse_args()
-
-    expr = args.expr if args.expr else "(x and x) or (x and x)"
-    num_steps = int(args.num_steps) if args.num_steps else 5
-    debug = bool(args.debug)
-    cot = bool(args.cot)
-    claude = bool(args.claude)
-    verbose = bool(args.verbose)
+    
+    print(f"\nSOLVING '{args.expr}'...\n")
+    
+    if args.claude:
+        model_name = "claude-3-haiku"
+        print("Using Claude-3-Haiku")
+    else:
+        model_name = "gpt-3.5-turbo"
+        print("Using GPT-3.5-Turbo")
 
     global llm
-    llm = partial(llm_api_call, model="gpt-3.5-turbo" if not claude else "claude-3-haiku")
+    llm = partial(llm_api_call, model=model_name)
 
-    if claude: print("Using Claude-3-Haiku")
-    else: print("Using GPT-3.5-Turbo")
-
-    proof_engine(expr, max_num_steps=num_steps, verbose=verbose, debug=debug, naive=cot)
+    proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
