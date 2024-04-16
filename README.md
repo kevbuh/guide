@@ -32,6 +32,8 @@ pip install -r requirements.txt
     - [x] integrate original repo
     - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
     - [x] use value evaluation and prune
+    - [x] Stop when found first proof
+    - [x] add expr_history for more accurate value ratings
 - [ ] Symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
@@ -41,17 +43,15 @@ pip install -r requirements.txt
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
-    - [ ] Stop when found first proof
-    - [ ] add expr_history for more accurate value ratings
 
-## Example usage
+## Usage
 
 Looks like the system works for simple expressions!
 
 Command: uses GPT-3.5-Turbo and prints out process information. 
 
 ```bash
-python3 guide/proof_engine.py --verbose
+python3 guide/proof_engine.py
 ```
 
 Output
@@ -60,35 +60,54 @@ SOLVING '(x and x) or (x and x)'...
 
 Using GPT-3.5-Turbo
 USING TREE OF THOUGHT
-Level:1/3
-DETAIL: new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
-DETAIL: new_expr='(x and x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
-DETAIL: new_expr='(x or x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)'], law_history=[]
-Level:2/3
-DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='(x and x)', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x or x)'], law_history=['Idempotent Law']
-Level:3/3
-pruning 6 leaves...
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+Tree Level:1/4
+Tree Level:2/4
+Tree Level:3/4
+pruning 12 leaves...
 Fully reduced expression, proof done.
-Removing non-unique proof
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
-DETAIL: new_expr='x', new_law='Idempotent Law', expr_history=['(x and x) or (x and x)', '(x and x or x)', '(x and x)'], law_history=['Idempotent Law', 'Idempotent Law']
+Fully reduced expression, proof done.
+Found non-unique proof, removing...
+Fully reduced expression, proof done.
+Found non-unique proof, removing...
+Tree Level:4/4
+Fully reduced expression, proof done.
+Fully reduced expression, proof done.
+Found non-unique proof, removing...
+Fully reduced expression, proof done.
+Found non-unique proof, removing...
 ----------FINAL PROOF----------
 Proof:
 (x and x) or (x and x)                Idempotent Law
-≡ (x and x or x)                      Idempotent Law
+≡ (x or x)                            Idempotent Law
 ≡ x
+----------FINAL PROOF #2----------
+Proof:
+(x and x) or (x and x)                Idempotent Law
+≡ (x or x)                            Commutative Law
+≡ (x or x)                            Idempotent Law
+≡ x
+```
+
+CLI Arguments
+```bash
+usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose] [--cot] [--claude] [--T T] [--B B] [--K K]
+                       [--early_stop]
+
+Prompt engine CLI args
+
+options:
+  -h, --help            show this help message and exit
+  --expr EXPR           The expression to evaluate
+  --num_steps NUM_STEPS
+                        Number of proof steps
+  --debug               Boolean to print debug statements
+  --verbose             Print out states at each step
+  --cot                 Boolean to use Chain of Thought
+  --claude              Boolean to use Claude-3-Haiku
+  --T T                 ToT Tree depth
+  --B B                 ToT Branching Factor
+  --K K                 ToT Size limit
+  --early_stop          Boolean to return on first proof found
 ```
 
 <!-- Command

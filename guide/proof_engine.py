@@ -143,6 +143,11 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
     formatted_proof = get_formatted_proof(proof_history, law_history)
     return proof_history, formatted_proof
 
+def is_unique(item, unique_proofs):
+    _, expr_history, _ = item
+    expr_history_u = set(tuple(proof[1]) for proof in unique_proofs) # just check expr_history
+    return tuple(expr_history) not in expr_history_u
+
 def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
     """
     psuedo code params from paper:
@@ -157,20 +162,32 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
     unique_proofs = []
 
     for t in range(T): # each level
-        print(f"Level:{t+1}/{T}")
-        new_q = []
-        
+        print(f"Tree Level:{t+1}/{T}")
+
         values = evaluate_tree(q)
         q = prune_tree(values, q, K)
+        new_q = []
 
         for item in q: # go through each thought on level
             expr_i, expr_history, law_history = item
 
             if expr_i in terminal_values or len(expr_i) == 1: # to determine if tautology or not
                 print(f"Fully reduced expression, proof done.")
-                if item not in unique_proofs: 
-                    print("Removing non-unique proof")
+                expr, expr_history, law_history = item
+                
+                # if item not in unique_proofs: 
+                if is_unique(item, unique_proofs):
                     unique_proofs.append(item)
+
+                     # early stop on first proof found
+                    if early_stop:
+                        print("EARLY STOPPING, FOUND PROOF...")
+                        for i, (expr, expr_history, law_history) in enumerate(unique_proofs):
+                            formatted_proof = get_formatted_proof(expr_history, law_history, num=i+1)
+                            return q, formatted_proof
+                else:
+                    print("Found non-unique proof, removing...")
+                    
                 continue
             
             expr_deductions = symbolic_deduce(expr_i, verbose=False) 
@@ -204,7 +221,7 @@ def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
         solve_cot(expr, max_num_steps, verbose, debug)
     else: 
         print("USING TREE OF THOUGHT")
-        return solve_tot(expr, T=3, B=3, K=3, verbose=verbose)
+        return solve_tot(expr, T=T, B=B, K=K, verbose=verbose) 
 
 if __name__ == '__main__':
     # TODO: How should we test these?
@@ -226,6 +243,11 @@ if __name__ == '__main__':
     parser.add_argument("--verbose", action='store_true', help="Print out states at each step")
     parser.add_argument("--cot", action='store_true', help="Boolean to use Chain of Thought")
     parser.add_argument("--claude", action='store_true', help="Boolean to use Claude-3-Haiku")
+    parser.add_argument("--T",  type=int, default=4, help="ToT Tree depth")
+    parser.add_argument("--B",  type=int, default=4, help="ToT Branching Factor")
+    parser.add_argument("--K",  type=int, default=4, help="ToT Size limit")
+    parser.add_argument("--early_stop", action='store_true', help="Boolean to return on first proof found")
+
     args = parser.parse_args()
     
     print(f"\nSOLVING '{args.expr}'...\n")
@@ -237,7 +259,11 @@ if __name__ == '__main__':
         model_name = "gpt-3.5-turbo"
         print("Using GPT-3.5-Turbo")
 
-    global llm
+    global T, B, K, early_stop, llm
     llm = partial(llm_api_call, model=model_name)
+    T = args.T
+    B = args.B
+    K = args.K
+    early_stop = args.early_stop
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
