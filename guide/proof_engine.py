@@ -24,36 +24,46 @@ def create_propose_prompt(expr, expr_deductions):
 
     return llm_message, choice_dict
 
+
 def get_llm_choice(llm_text, choice_dict, llm_message):
     """search for LLM choice selection and send choice back to symbolic engine"""
     pattern = r"LLM CHOICE: #(\d+)\."
     match = re.search(pattern, llm_text)
+    retries = 0
+
+    MAX_RETRIES = 2  # Set the maximum number of retries
+    while not match and retries < MAX_RETRIES:
+        print("Couldn't find LLM choice...retrying")
+        llm_res = llm(message=llm_message)  # send message to llm and collect its text response
+        match = re.search(pattern, llm_res)
+        retries += 1
+
     if match:
-        choice_number = match.group(1) # capture the LLM choice 
-        assert choice_number, "ERROR: Choice number not found"
+        choice_number = match.group(1)
         new_expr = choice_dict[choice_number][0]
         new_law = choice_dict[choice_number][1]
-        return choice_number, new_expr, new_law 
+        return choice_number, new_expr, new_law
     else:
-        # TODO: set max limit of retries
-        print("Couldn't find LLM choice...retrying")
-        llm_res = llm(message=llm_message) # send message to llm and collect its text response
-        return get_llm_choice(llm_res, choice_dict, llm_message)
-    
+        raise ValueError("ERROR: Choice number not found after maximum retries")
+
 def get_llm_value(llm_text, llm_message):
     """search for LLM value and send choice back"""
     match = re.search(r'\d+', llm_text)
+    retries = 0
+
+    MAX_RETRIES = 2  # Set the maximum number of retries
+    while not match and retries < MAX_RETRIES:
+        print("Couldn't find number...retrying")
+        llm_res = llm(message=llm_message)  # send message to llm and collect its text response
+        match = re.search(r'\d+', llm_res)
+        retries += 1
+
     if match:
-        value = int(match.group(0)) # capture the LLM value 
+        value = int(match.group(0))
         return value
     else:
-        print("ERROR: Choice number not found in the response.")
-        print("Couldn't find number...retrying")
-        # TODO: set max limit of retries
-        llm_res = llm(message=llm_message) # send message to llm and collect its text response
-        return get_llm_value(llm_res, llm_message)
+        raise ValueError("ERROR: Choice number not found after maximum retries")
     
-
 def get_value(expr, expr_history):
     # TODO: add expr_history for more accurate value ratings
     # TODO: make LLM selection global

@@ -1,5 +1,5 @@
 propose_prompt = """ORIGINAL INPUT EXPRESSION: {expr}
-Choose ONE of the following that you think will best help you solve if this statement is a tautology. Look at all of the laws. Generate thoughts about which logical is best, then output the selection of what law is best.
+Choose ONE of the following that you think will best help you solve if this statement is a tautology. Look at all of the laws. Generate thoughts about which logical is best, then output the selection of what law is best. Be concise.
 """
 
 output_prompt = """Respond with your best output like this at the VERY end:
