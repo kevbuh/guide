@@ -9,7 +9,7 @@ terminal_values = set(["True", "False", "1", "0", "x", "y"])
 def create_propose_prompt(expr, expr_deductions):
     """output law and expression in a numbered list and create prompt"""
     choices_list = []
-    choice_dict = {}  # Tracks the possible choices to choose from
+    choice_dict = {} # Tracks the possible choices to choose from
     counter = 0
 
     for law, expressions in expr_deductions.items():
@@ -31,7 +31,7 @@ def get_llm_choice(llm_text, choice_dict, llm_message):
     match = re.search(pattern, llm_text)
     retries = 0
 
-    MAX_RETRIES = 2  # Set the maximum number of retries
+    MAX_RETRIES = 2
     while not match and retries < MAX_RETRIES:
         print("Couldn't find LLM choice...retrying")
         llm_res = llm(message=llm_message)  # send message to llm and collect its text response
@@ -51,7 +51,7 @@ def get_llm_value(llm_text, llm_message):
     match = re.search(r'\d+', llm_text)
     retries = 0
 
-    MAX_RETRIES = 2  # Set the maximum number of retries
+    MAX_RETRIES = 2
     while not match and retries < MAX_RETRIES:
         print("Couldn't find number...retrying")
         llm_res = llm(message=llm_message)  # send message to llm and collect its text response
@@ -65,9 +65,7 @@ def get_llm_value(llm_text, llm_message):
         raise ValueError("ERROR: Choice number not found after maximum retries")
     
 def get_value(expr, expr_history):
-    # TODO: add expr_history for more accurate value ratings
-    # TODO: make LLM selection global
-    prompt = value_prompt.format(expr=expr)
+    prompt = value_prompt.format(expr=expr, expr_history=expr_history)
     llm_res = llm(message=prompt)
     value = get_llm_value(llm_res, prompt)
     return value
@@ -209,7 +207,7 @@ def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
         return solve_tot(expr, T=3, B=3, K=3, verbose=verbose)
 
 if __name__ == '__main__':
-    # TODO: these should be test cases
+    # TODO: How should we test these?
     # CK's examples
     # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
     # expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
