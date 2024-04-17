@@ -32,8 +32,9 @@ pip install -r requirements.txt
     - [x] integrate original repo
     - [x] option for GPT-3.5 Turbo or Claude-3 Haiku
     - [x] use value evaluation and prune
-    - [x] Stop when found first proof
+    - [x] stop when found first proof
     - [x] add expr_history for more accurate value ratings
+    - [x] Flag to choose all llm or use symbolic engine 
 - [ ] Symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
@@ -51,7 +52,7 @@ Looks like the system works for simple expressions!
 Command: uses GPT-3.5-Turbo and prints out process information. 
 
 ```bash
-python3 guide/proof_engine.py
+python3 guide/proof_engine.py --verifiable
 ```
 
 Output
@@ -67,10 +68,11 @@ pruning 12 leaves...
 Fully reduced expression, proof done.
 Fully reduced expression, proof done.
 Found non-unique proof, removing...
+Tree Level:4/4
+pruning 4 leaves...
+Fully reduced expression, proof done.
 Fully reduced expression, proof done.
 Found non-unique proof, removing...
-Tree Level:4/4
-Fully reduced expression, proof done.
 Fully reduced expression, proof done.
 Found non-unique proof, removing...
 Fully reduced expression, proof done.
@@ -90,8 +92,8 @@ Proof:
 
 CLI Arguments
 ```bash
-usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose] [--cot] [--claude] [--T T] [--B B] [--K K]
-                       [--early_stop]
+usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose] [--cot]
+                       [--claude] [--T T] [--B B] [--K K] [--early_stop] [--verifiable]
 
 Prompt engine CLI args
 
@@ -108,6 +110,7 @@ options:
   --B B                 ToT Branching Factor
   --K K                 ToT Size limit
   --early_stop          Boolean to return on first proof found
+  --verifiable          Boolean to evaluate all expressions through llm instead of symbolic engine
 ```
 
 <!-- Command

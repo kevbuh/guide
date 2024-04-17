@@ -1,8 +1,9 @@
 import re
+import json
 from llm import llm_api_call
-from symbolic import symbolic_deduce
-from prompts import propose_prompt, output_prompt, value_prompt
 from functools import partial
+from symbolic import symbolic_deduce
+from prompts import propose_prompt, propose_prompt_short, value_prompt, deduction_prompt
 
 terminal_values = set(["True", "False", "1", "0", "x", "y"])
 
@@ -20,7 +21,11 @@ def create_propose_prompt(expr, expr_deductions):
             counter += 1
 
     choices = "".join(choices_list)
-    llm_message = f"{expr}\n{choices}{output_prompt}"
+    llm_message = f"{expr}\n{choices}{propose_prompt_short}"
+
+    # TODO: test with other prompts
+    # llm_message = propose_prompt.format(expr=expr, choices=choices)
+    # print("LLM_MESSAGE",llm_message)
 
     return llm_message, choice_dict
 
@@ -30,21 +35,24 @@ def get_llm_choice(llm_text, choice_dict, llm_message):
     pattern = r"LLM CHOICE: #(\d+)\."
     match = re.search(pattern, llm_text)
     retries = 0
-
     MAX_RETRIES = 2
-    while not match and retries < MAX_RETRIES:
-        print("Couldn't find LLM choice...retrying")
-        llm_res = llm(message=llm_message)  # send message to llm and collect its text response
+
+    while retries < MAX_RETRIES:
+        if match:
+            choice_number = match.group(1)
+            if choice_number in choice_dict:
+                new_expr, new_law = choice_dict[choice_number]
+                return choice_number, new_expr, new_law
+            else:
+                print(f"Warning: Choice number {choice_number} not in choice_dict. Retrying...")
+        else:
+            print("Couldn't find LLM choice...retrying")
+        
+        llm_res = llm(message=llm_message)  # Send message to LLM and collect its text response
         match = re.search(pattern, llm_res)
         retries += 1
 
-    if match:
-        choice_number = match.group(1)
-        new_expr = choice_dict[choice_number][0]
-        new_law = choice_dict[choice_number][1]
-        return choice_number, new_expr, new_law
-    else:
-        raise ValueError("ERROR: Choice number not found after maximum retries")
+    raise ValueError("ERROR: Valid choice number not found after maximum retries")
 
 def get_llm_value(llm_text, llm_message):
     """search for LLM value and send choice back"""
@@ -148,6 +156,18 @@ def is_unique(item, unique_proofs):
     expr_history_u = set(tuple(proof[1]) for proof in unique_proofs) # just check expr_history
     return tuple(expr_history) not in expr_history_u
 
+def llm_symbolic_deduce(expr_i, verbose=False, num_retries=3):
+    prompt = deduction_prompt.format(expr=expr_i)
+    llm_res = llm(message=prompt)
+    
+    if verbose: print("llm_symbolic_deduce:",llm_res)
+
+    # convert output to dict
+    json_str = llm_res.split('LLM DICT:')[1].strip()
+    data_dict = json.loads(json_str)
+
+    return data_dict
+
 def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
     """
     psuedo code params from paper:
@@ -190,7 +210,12 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
                     
                 continue
             
-            expr_deductions = symbolic_deduce(expr_i, verbose=False) 
+            if not verifiable: 
+                expr_deductions = llm_symbolic_deduce(expr_i, verbose)
+            else: 
+                expr_deductions = symbolic_deduce(expr_i, verbose) 
+
+            if verbose: print("expr_deductions", expr_deductions)
 
             for i in range(B): 
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
@@ -247,6 +272,7 @@ if __name__ == '__main__':
     parser.add_argument("--B",  type=int, default=4, help="ToT Branching Factor")
     parser.add_argument("--K",  type=int, default=4, help="ToT Size limit")
     parser.add_argument("--early_stop", action='store_true', help="Boolean to return on first proof found")
+    parser.add_argument("--verifiable", action='store_true', help="Boolean to evaluate all expressions through llm instead of symbolic engine")
 
     args = parser.parse_args()
     
@@ -259,11 +285,12 @@ if __name__ == '__main__':
         model_name = "gpt-3.5-turbo"
         print("Using GPT-3.5-Turbo")
 
-    global T, B, K, early_stop, llm
+    global T, B, K, early_stop, llm, verifiable
     llm = partial(llm_api_call, model=model_name)
     T = args.T
     B = args.B
     K = args.K
     early_stop = args.early_stop
+    verifiable = args.verifiable
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
