@@ -272,7 +272,7 @@ if __name__ == '__main__':
     parser.add_argument("--B",  type=int, default=4, help="ToT Branching Factor")
     parser.add_argument("--K",  type=int, default=4, help="ToT Size limit")
     parser.add_argument("--early_stop", action='store_true', help="Boolean to return on first proof found")
-    parser.add_argument("--verifiable", action='store_true', help="Boolean to evaluate all expressions through llm instead of symbolic engine")
+    parser.add_argument("--verifiable", action='store_true', help="Boolean to evaluate all expressions through symbolic engine instead of llm")
 
     args = parser.parse_args()
     
