@@ -110,7 +110,7 @@ options:
   --B B                 ToT Branching Factor
   --K K                 ToT Size limit
   --early_stop          Boolean to return on first proof found
-  --verifiable          Boolean to evaluate all expressions through llm instead of symbolic engine
+  --verifiable          Boolean to evaluate all expressions through symbolic engine instead of llm
 ```
 
 <!-- Command
