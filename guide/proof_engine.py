@@ -29,7 +29,6 @@ def create_propose_prompt(expr, expr_deductions):
 
     return llm_message, choice_dict
 
-
 def get_llm_choice(llm_text, choice_dict, llm_message):
     """search for LLM choice selection and send choice back to symbolic engine"""
     pattern = r"LLM CHOICE: #(\d+)\."
@@ -158,15 +157,21 @@ def is_unique(item, unique_proofs):
 
 def llm_symbolic_deduce(expr_i, verbose=False, num_retries=3):
     prompt = deduction_prompt.format(expr=expr_i)
-    llm_res = llm(message=prompt)
-    
-    if verbose: print("llm_symbolic_deduce:",llm_res)
+    attempt = 0
 
-    # convert output to dict
-    json_str = llm_res.split('LLM DICT:')[1].strip()
-    data_dict = json.loads(json_str)
+    while attempt < num_retries:
+        llm_res = llm(message=prompt)
+        if verbose: print(f"Attempt {attempt+1}: llm_symbolic_deduce:", llm_res)
+        try:
+            json_str = llm_res.split('LLM DICT:')[1].strip()
+            json_str = json_str.replace("\n", "").replace(",}","}").replace("'", '"')
+            data_dict = json.loads(json_str)
+            return data_dict
+        except json.JSONDecodeError as e:
+            print(f"ERROR on attempt {attempt+1}: trying invalid dict in llm_symbolic_deduce(), {json_str=}")
+            attempt += 1
+    raise Exception("All attempts failed to parse JSON in llm_symbolic_deduce()")
 
-    return data_dict
 
 def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
     """
@@ -249,17 +254,6 @@ def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
         return solve_tot(expr, T=T, B=B, K=K, verbose=verbose) 
 
 if __name__ == '__main__':
-    # TODO: How should we test these?
-    # CK's examples
-    # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
-    # expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
-    # expr = "not((a or (a and b)) -> a)"         # NOT TAUTOLOGY
-    # expr = "(((y and x) or x) and y)"           # NOT TAUTOLOGY
-
-    # Simple examples
-    # expr = "(x and y) or (x and y)"             # TAUTOLOGY
-    # expr = "(x and x) or (x and x)"
-
     import argparse
     parser = argparse.ArgumentParser(description="Prompt engine CLI args")
     parser.add_argument("--expr", type=str, default="(x and x) or (x and x)", help="The expression to evaluate")
@@ -294,3 +288,14 @@ if __name__ == '__main__':
     verifiable = args.verifiable
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
+
+# TODO: How should we test these?
+# CK's examples
+# expr = "(a or (a and b)) -> a"              # TAUTOLOGY
+# expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
+# expr = "not((a or (a and b)) -> a)"         # NOT TAUTOLOGY
+# expr = "(((y and x) or x) and y)"           # NOT TAUTOLOGY
+
+# Simple examples
+# expr = "(x and y) or (x and y)"             # TAUTOLOGY
+# expr = "(x and x) or (x and x)"
