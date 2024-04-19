@@ -1,11 +1,13 @@
 import re
 import json
-from llm import llm_api_call
+import argparse
 from functools import partial
+
+from llm import llm_api_call
 from symbolic import symbolic_deduce, simplify
 from prompts import propose_prompt, propose_prompt_short, value_prompt, deduction_prompt
 
-terminal_values = set(["True", "False", "1", "0", "x", "y"])
+TERMINAL_VALUES = {"True", "False", "1", "0", "x", "y", "x and y", "y and x", "x or y", "y or x"}
 
 def create_propose_prompt(expr, expr_deductions):
     """output law and expression in a numbered list and create prompt"""
@@ -120,7 +122,7 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
             print(f"\n----------PROOF STEP #{i+1}----------\n")
             print(f"CURRENT EXPR: {expr}")
 
-        if expr.replace("(","").replace(")","") in terminal_values: # to determine if tautology or not
+        if expr.replace("(","").replace(")","") in TERMINAL_VALUES: # to determine if tautology or not
             print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
@@ -158,7 +160,7 @@ def is_unique(item, unique_proofs):
 def check_proof(item, unique_proofs, q):
     a, b, c = item
     # check if proof is done
-    if a.replace("(","").replace(")","") in terminal_values or len(a) == 1:
+    if a.replace("(","").replace(")","") in TERMINAL_VALUES or len(a) == 1:
         # if item not in unique_proofs: # NOTE: is this the same as is_unique?
         if is_unique(item, unique_proofs):
             print(f"FULLY REDUCED EXPR, PROOF DONE.")
@@ -215,8 +217,13 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
             # generate list of deduction
             if pure_llm: expr_deductions = llm_symbolic_deduce(expr_i, verbose) # pure llm symbolic deductions
             else: expr_deductions = symbolic_deduce(expr_i, verbose) # normal symbolic engine
+
             if not expr_deductions: 
                 print("NO MORE DEDUCTIONS FOUND...")
+                # check to see if you can reduce expressions further if no deductions could be applied
+                # if not simplify(expr=expr_i, item_history=item, verbose=verbose):
+                #     print("COULDN'T SIMPLIFY OR DEDUCE FURTHER EXPRESSIONS, END OF PROOF...")
+                #     return check_proof(item, unique_proofs, q)
                 break
 
             # generate B new thoughts per node
@@ -232,7 +239,7 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
                 law_history_new = law_history + [new_law]
                 item = (new_expr, expr_history_new, law_history_new)
 
-                # simplify if possible
+                # simplify if possible, NOTE: should this go before or after symbolic engine?
                 item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
 
                 res = check_proof(item, unique_proofs, q)
@@ -261,7 +268,6 @@ def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
         return solve_tot(expr, T=T, B=B, K=K, verbose=verbose) 
 
 if __name__ == '__main__':
-    import argparse
     parser = argparse.ArgumentParser(description="Prompt engine CLI args")
     parser.add_argument("--expr", type=str, default="(x and x) or (x and x)", help="The expression to evaluate")
     parser.add_argument("--num_steps", type=int, default=5, help="Number of proof steps")
@@ -295,8 +301,10 @@ if __name__ == '__main__':
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
     else:
         print("ENGINE: symbolic")
-    if args.cot: print("METHOD: Chain of Thought\n")
-    else: print("METHOD: Tree of Thought\n")
+    if args.cot: print("METHOD: Chain of Thought")
+    else: print("METHOD: Tree of Thought")
+    print("----------------------------")
+
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
 
