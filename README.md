@@ -1,7 +1,7 @@
 # Guide
 
 <div align="center">
-    <img src="./assets/system_overview.png" alt="System Overview" width="600"/>
+    <img src="./assets/guided llm v4.svg" alt="System Overview" width="600"/>
 </div>
 
 
