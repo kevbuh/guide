@@ -7,6 +7,7 @@ the condition, it manipulates the tree into the new logical condition and return
 unparsed trees.
 """
 
+import ast
 import astor
 from collections import defaultdict
 from utils import booleanTree, helpers
@@ -26,6 +27,66 @@ class ReplaceVisitor(NodeTransformer):
         if node == self.original_node:
             return self.replacement_node
         return self.generic_visit(node)
+    
+def simplify(expr, item_history=None, verbose=False):
+    if type(expr) == str:
+        parseTree = ast.parse(expr, mode='eval')
+    # elif type(expr) == ast:
+        # parseTree = expr
+    else:
+        raise Exception(f"Expr {expr} should be string")
+        
+    tree = parseTree
+    law_code_tuples = []
+
+    for node in walk(tree): 
+        match node:
+            case BoolOp(op=Or(), values=[a, Constant(value=0)]): # A or 0 = A
+                new_node = Name(id=a)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                # new_expressions["Identity Law"].append(modified_code[:-1])
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+                if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
+            case BoolOp(op=Or(), values=[a, Constant(value=1)]): # A or 1 = A
+                # NOTE: should we also do A or 1 = 1?
+                new_node = Name(id=a)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                # new_expressions["Identity Law"].append(modified_code[:-1])
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+
+                if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
+            case BoolOp(op=And(), values=[a, Constant(value=1)]): # A and 1 = A
+                # NOTE: should we also do A and 1 = 1?
+                new_node = Name(id=a)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                # new_expressions["Identity Law"].append(modified_code[:-1])
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+
+                if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
+            case BoolOp(op=And(), values=[a, Constant(value=0)]): # A and 0 = 0
+                new_node = Constant(value=0)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                # new_expressions["Identity Law"].append(modified_code[:-1])
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+
+                if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
+
+    if verbose: print("SIMPLIFICATION OUTPUT:", law_code_tuples)
+
+    # update with new expr and law
+    if law_code_tuples != []:
+        _, expr_history, law_history = item_history
+        assert len(law_code_tuples) == 1, f"simplify() too many tuples"
+        expr_history_new = expr_history + [law_code_tuples[0][1]]
+        law_history_new = law_history + [law_code_tuples[0][0]] #[[x[0]] for x in law_code_tuples]
+        return (law_code_tuples[0][1], expr_history_new, law_history_new)
+    else:
+        return None
+    
 
 def symbolic_deduce(expr, verbose=False):
   """
@@ -52,8 +113,8 @@ def symbolic_deduce(expr, verbose=False):
   parsed_code = bTree.parseTree
   new_expressions = defaultdict(list)
 
-  if verbose: print("input  :", expr)
-  if verbose: print("detail :")
+  if verbose: print("SYMBOLIC ENGINE input :", expr)
+  if verbose: print("SYMBOLIC ENGINE detail:")
 
   # ----------APPLY LAWS ONTO AST ONE AT A TIME-----------
 
@@ -154,7 +215,7 @@ def symbolic_deduce(expr, verbose=False):
               if verbose: print(f" - Applying Distributive Law 2: {expr} = {modified_code[:-1]}")
 
   # DeMorgan's Law 
-  for node in walk(parsed_code): 
+  for node in walk(parsed_code):  # NOTE: BFS traversal of the tree
       match node:
           case UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b])):                                             
               new_node = BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
@@ -178,8 +239,8 @@ def symbolic_deduce(expr, verbose=False):
           case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]):                                      
               if t_util.are_subtrees_equivalent(a, objects[0]): 
                   new_node = Name(id=a)
-                  replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                  modified_code = astor.to_source(replaced_tree)
+                  replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code) # replace node with new_node
+                  modified_code = astor.to_source(replaced_tree) # re-evalaluate
                   new_expressions["Absorption Law"].append(modified_code[:-1])
                   if verbose: print(f" - Applying Absorption Law: {expr} = {modified_code[:-1]}")
 
@@ -215,7 +276,7 @@ def symbolic_deduce(expr, verbose=False):
                   new_expressions["Idempotent Law"].append(modified_code[:-1])
                   if verbose: print(f" - Applying Idempotent Law AND: {expr} = {modified_code[:-1]}")
 
-  if verbose: print("output :",new_expressions)
+  if verbose: print("SYMBOLIC ENGINE OUTPUT:", new_expressions)
   return new_expressions
 
 if __name__ == '__main__':  
