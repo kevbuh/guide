@@ -2,7 +2,7 @@ import re
 import json
 from llm import llm_api_call
 from functools import partial
-from symbolic import symbolic_deduce
+from symbolic import symbolic_deduce, simplify
 from prompts import propose_prompt, propose_prompt_short, value_prompt, deduction_prompt
 
 terminal_values = set(["True", "False", "1", "0", "x", "y"])
@@ -98,14 +98,12 @@ def prune_tree(values, q, K):
     return sorted_q
 
 def get_formatted_proof(proof_history, law_history, num=0):
-    # TODO: offset law history by one
     if num > 1: print(f"----------FINAL PROOF #{num}----------")
     else: print("----------FINAL PROOF----------")
     proof_steps = []
-    for i, (proof, law) in enumerate(zip(proof_history, law_history)):
-        if i == 0: proof_steps.append(f"{proof:35}   {law}")
-        else: proof_steps.append(f"{proof:35} {law}")
-    proof_steps.append(proof_history[-1]) # add last step (e.g. simply just 'x')
+    proof_steps.append(proof_history[0]) # add last step (e.g. simply just 'x')
+    for i, (proof, law) in enumerate(zip(proof_history[1:], law_history)):
+        proof_steps.append(f"{proof:35} {law}")
     formatted_proof = "Proof:\n" + "\n≡ ".join(proof_steps)
     print(formatted_proof)
     return formatted_proof
@@ -122,7 +120,7 @@ def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
             print(f"\n----------PROOF STEP #{i+1}----------\n")
             print(f"CURRENT EXPR: {expr}")
 
-        if expr in terminal_values: # to determine if tautology or not
+        if expr.replace("(","").replace(")","") in terminal_values: # to determine if tautology or not
             print(f"Expression '{expr}' cannot be further applied onto laws\n")
             break
         
@@ -157,6 +155,25 @@ def is_unique(item, unique_proofs):
     expr_history_u = set(tuple(proof[1]) for proof in unique_proofs) # just check expr_history
     return tuple(expr_history) not in expr_history_u
 
+def check_proof(item, unique_proofs, q):
+    a, b, c = item
+    # check if proof is done
+    if a.replace("(","").replace(")","") in terminal_values or len(a) == 1:
+        # if item not in unique_proofs: # NOTE: is this the same as is_unique?
+        if is_unique(item, unique_proofs):
+            print(f"FULLY REDUCED EXPR, PROOF DONE.")
+            unique_proofs.append(item)
+
+            # early stop for first proof found
+            if early_stop:
+                print("EARLY STOPPING, FOUND FIRST PROOF...")
+                for i, (a, b, c) in enumerate(unique_proofs):
+                    formatted_proof = get_formatted_proof(b, c, num=i+1)
+                    return q, formatted_proof
+        else:
+            print("REMOVING NON-UNIQUE PROOF...")
+    return None, None
+
 def llm_symbolic_deduce(expr_i, verbose=False, num_retries=3):
     prompt = deduction_prompt.format(expr=expr_i)
     attempt = 0
@@ -190,53 +207,43 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
 
     for t in range(T): # step limit (tree depth)
         print(f"TREE DEPTH:{t+1}/{T}")
-
         new_q = [] # stores nodes for next level
 
         for item in q: # go through each thought on level
             expr_i, expr_history, law_history = item
-
-            if expr_i in terminal_values or len(expr_i) == 1: # to determine if tautology or not
-                expr, expr_history, law_history = item
-                
-                # if item not in unique_proofs: # NOTE: is this the same as is_unique?
-                if is_unique(item, unique_proofs):
-                    print(f"FULLY REDUCED EXPR, PROOF DONE.")
-                    unique_proofs.append(item)
-
-                     # early stop for first proof found
-                    if early_stop:
-                        print("EARLY STOPPING, FOUND FIRST PROOF...")
-                        for i, (expr, expr_history, law_history) in enumerate(unique_proofs):
-                            formatted_proof = get_formatted_proof(expr_history, law_history, num=i+1)
-                            return q, formatted_proof
-                else:
-                    print("REMOVING NON-UNIQUE PROOF...")
-                    
-                continue
             
             # generate list of deduction
             if pure_llm: expr_deductions = llm_symbolic_deduce(expr_i, verbose) # pure llm symbolic deductions
             else: expr_deductions = symbolic_deduce(expr_i, verbose) # normal symbolic engine
-            if verbose: print("GENERATED LIST OF DEDUCTIONS: ", expr_deductions)
+            if not expr_deductions: 
+                print("NO MORE DEDUCTIONS FOUND...")
+                break
 
             # generate B new thoughts per node
             for i in range(B): 
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
                 llm_res = llm(message=llm_message) # send message to llm and collect its text response
-                choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
+                _, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
 
                 if verbose: print(f"NODE DETAIL: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
                 
                 # update structures and add node to BFS queue
                 expr_history_new = expr_history + [new_expr]
                 law_history_new = law_history + [new_law]
-                new_q.append((new_expr, expr_history_new, law_history_new)) 
+                item = (new_expr, expr_history_new, law_history_new)
+
+                # simplify if possible
+                item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
+
+                res = check_proof(item, unique_proofs, q)
+                if early_stop and res != (None, None):
+                    return res
+
+                new_q.append(item) 
         
         # eval and select top nodes
         values = evaluate_tree(new_q) # rates each node on scale of 1-10
         q = prune_tree(values, new_q, K) # level-wise pruning
-        # q = new_q
 
     if unique_proofs: 
         for i, (expr, expr_history, law_history) in enumerate(unique_proofs):
@@ -285,10 +292,9 @@ if __name__ == '__main__':
     print(f"LLM: {model_name}")
     print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}")
     if pure_llm: 
-        print("WARNING: Not using symbolic engine, proof may have hallucinations")
-        print("ENGINE: PURE LLM")
+        print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
     else:
-        print("ENGINE: SYMBOLIC")
+        print("ENGINE: symbolic")
     if args.cot: print("METHOD: Chain of Thought\n")
     else: print("METHOD: Tree of Thought\n")
 
