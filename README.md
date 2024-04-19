@@ -38,9 +38,9 @@ pip install -r requirements.txt
 - [ ] Symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
+    - [x] simplification engine
     - [ ] complete implication and bi-conditional laws
     - [ ] fix expression bugs (below in bug tracker)
-    - [ ] simplification engine
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
