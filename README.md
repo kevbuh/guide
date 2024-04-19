@@ -40,10 +40,11 @@ pip install -r requirements.txt
     - [x] implement common laws on the AST
     - [ ] complete implication and bi-conditional laws
     - [ ] fix expression bugs (below in bug tracker)
-    - [ ] simplify AST at each step
+    - [ ] simplification engine
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
+    - [ ] Look at entire tree
 
 ## Usage
 
@@ -52,50 +53,54 @@ Looks like the system works for simple expressions!
 Command: uses GPT-3.5-Turbo and prints out process information. 
 
 ```bash
-python3 guide/proof_engine.py --verifiable
+python3 guide/proof_engine.py
 ```
 
 Output
 ```
-SOLVING '(x and x) or (x and x)'...
+SOLVING: '(x and x) or (x and x)'
+LLM: gpt-3.5-turbo
+PARAMS: T=5, B=3, K=5, early_stop=False, pure_llm=False
+ENGINE: SYMBOLIC
+METHOD: Tree of Thought
 
-Using GPT-3.5-Turbo
-USING TREE OF THOUGHT
-Tree Level:1/4
-Tree Level:2/4
-Tree Level:3/4
-pruning 12 leaves...
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Found non-unique proof, removing...
-Tree Level:4/4
+TREE DEPTH:1/5
+TREE DEPTH:2/5
 pruning 4 leaves...
-Fully reduced expression, proof done.
-Fully reduced expression, proof done.
-Found non-unique proof, removing...
-Fully reduced expression, proof done.
-Found non-unique proof, removing...
-Fully reduced expression, proof done.
-Found non-unique proof, removing...
+TREE DEPTH:3/5
+FULLY REDUCED EXPR, PROOF DONE.
+REMOVING NON-UNIQUE PROOF...
+pruning 4 leaves...
+TREE DEPTH:4/5
+FULLY REDUCED EXPR, PROOF DONE.
+REMOVING NON-UNIQUE PROOF...
+REMOVING NON-UNIQUE PROOF...
+FULLY REDUCED EXPR, PROOF DONE.
+REMOVING NON-UNIQUE PROOF...
+TREE DEPTH:5/5
 ----------FINAL PROOF----------
 Proof:
 (x and x) or (x and x)                Idempotent Law
-≡ (x or x)                            Idempotent Law
+≡ (x and x or x)                      Idempotent Law
 ≡ x
 ----------FINAL PROOF #2----------
 Proof:
-(x and x) or (x and x)                Idempotent Law
-≡ (x or x)                            Commutative Law
+(x and x) or (x and x)                Distributive Law
+≡ ((x and x or x) and (x and x or x)) Idempotent Law
 ≡ (x or x)                            Idempotent Law
+≡ x
+----------FINAL PROOF #3----------
+Proof:
+(x and x) or (x and x)                Idempotent Law
+≡ (x and x or x)                      Idempotent Law
+≡ (x and x)                           Idempotent Law
 ≡ x
 ```
 
 CLI Arguments
 ```bash
-usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose] [--cot]
-                       [--claude] [--T T] [--B B] [--K K] [--early_stop] [--verifiable]
-
-Prompt engine CLI args
+usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose]
+                       [--cot] [--claude] [--T T] [--B B] [--K K] [--early_stop] [--pure_llm]
 
 options:
   -h, --help            show this help message and exit
@@ -106,90 +111,12 @@ options:
   --verbose             Print out states at each step
   --cot                 Boolean to use Chain of Thought
   --claude              Boolean to use Claude-3-Haiku
-  --T T                 ToT Tree depth
-  --B B                 ToT Branching Factor
-  --K K                 ToT Size limit
+  --T T                 ToT tree depth
+  --B B                 ToT branching factor
+  --K K                 ToT max number of nodes per level
   --early_stop          Boolean to return on first proof found
-  --verifiable          Boolean to evaluate all expressions through symbolic engine instead of llm
+  --pure_llm            Boolean to evaluate all expressions through llm instead of symbolic engine
 ```
-
-<!-- Command
-```bash
-python3 guide/proof_engine.py --expr="(x and x) or (x and x)"
-``` -->
-<!-- Output
-```
-----------PROOF STEP #1----------
-
-CURRENT EXPR: (x and x) or (x and x)
-
-Prompt:
-'''original input expression: (x and x) or (x and x)
-Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best.#0., 'Commutative Law', '(x and x or x and x)'
-#1., 'Commutative Law', '(x and x or x and x)'
-#2., 'Commutative Law', '(x and x or x and x)'
-#3., 'Distributive Law', '((x and x or x) and (x and x or x))'
-#4., 'Idempotent Law', '(x and x or x)'
-#5., 'Idempotent Law', '(x or x)'
-#6., 'Idempotent Law', '(x or x)'
-Respond with your best output like this at the VERY end:
-My choice: #?. (? law)'''
-
-LLM Response:
-'''To determine if the given expression (x and x) or (x and x) is a tautology, the Idempotent Law would be the most helpful logical law.
-
-The Idempotent Law states that for any proposition p, the following are true:
-p and p = p
-p or p = p
-
-Applying the Idempotent Law to the given expression, we get:
-(x and x) or (x and x) = (x) or (x) = x
-
-Since the expression simplifies to just 'x', it is a tautology, meaning it is always true regardless of the value of x.
-
-My choice: #4. (Idempotent Law)'''
-
-----------PROOF STEP #2----------
-
-CURRENT EXPR: (x and x or x)
-
-Prompt:
-'''original input expression: (x and x or x)
-Choose one of the following that you think will best help you solve if this statement is a tautology. Generate thoughts about which logical law helps you most, then output 1 row, where the row is a selection of what law is best.#0., 'Commutative Law', '(x or x and x)'
-#1., 'Commutative Law', '(x or x and x)'
-#2., 'Distributive Law', '((x or x) and (x or x))'
-#3., 'Idempotent Law', '(x and (x or x))'
-#4., 'Idempotent Law', '(x and x)'
-#5., 'Idempotent Law', 'x'
-Respond with your best output like this at the VERY end:
-My choice: #?. (? law)'''
-
-LLM Response:
-'''To determine if the given expression "(x and x or x)" is a tautology, the best logical law to apply is the Idempotent Law.
-
-The Idempotent Law states that for any proposition x, the following are true:
-x and x = x
-x or x = x
-
-Applying the Idempotent Law to the given expression, we get:
-(x and x or x) = (x or x)
-= x
-
-Since the expression simplifies to just "x", it is a tautology, as it is always true regardless of the value of x.
-
-My choice: #5. (Idempotent Law)'''
-
-----------PROOF STEP #3----------
-
-CURRENT EXPR: x
-Expression 'x' cannot be further applied onto laws
-
-----------FINAL PROOF----------
-Proof:
-(x and x) or (x and x)                Idempotent Law
-≡ (x and x or x)                      Idempotent Law
-≡ x
-``` -->
 
 ## Symbolic Logic
 
@@ -244,41 +171,37 @@ $\Leftrightarrow: \text{Bi-Conditional}$
    - $A \land A = A$
    - $A \lor A = A$
 
-7. **Zero and One Law**:
-   - $A \land 0 = 0$
-   - $A \lor 1 = 1$
-
-8. **Absorption Law**:
+7. **Absorption Law**:
    - $A \land (A \lor B) = A$
    - $A \lor (A \land B) = A$
 
-9. **De Morgan's Theorem**:
+8. **De Morgan's Theorem**:
    - $\lnot (A \land B) = \lnot A \lor \lnot B$
    - $\lnot (A \lor B) = \lnot A \land \lnot B$
 
-10. **Double Negation (Involution) Law**:
+9. **Double Negation (Involution) Law**:
     - $\lnot (\lnot A) = A$
 
-11. **Implication Transformation**:
+10. **Implication Transformation**:
     - $A \Rightarrow B = \lnot A \lor B$
 
-12. **Consensus Theorem**:
+11. **Consensus Theorem**:
     - $(A \land B) \lor (\lnot A \land C) \lor (B \land C) = (A \land B) \lor (\lnot A \land C)$
 
-13. **Consensus Law**:
+12. **Consensus Law**:
     - $(A \land B) \lor (\lnot B \land C) \lor (A \land C) = (A \land B) \lor (\lnot B \land C)$
 
-14. **Adjacency Law**:
+13. **Adjacency Law**:
     - $(A \land B) \lor (A \land \lnot B) = A$
 
-15. **Simplification Law**:
+14. **Simplification Law**:
     - $(A \lor B) \land (A \lor \lnot B) = A$
 
-16. **Implication Laws**:
+15. **Implication Laws**:
     - $A \Rightarrow B = \lnot A \lor B$
     - $\lnot (A \Rightarrow B) = A \land \lnot B$
 
-17. **Biconditional (iff) Laws**:
+16. **Biconditional (iff) Laws**:
     - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$
     <!-- - $\lnot (A \Leftrightarrow B) = A \oplus B$ -->
 

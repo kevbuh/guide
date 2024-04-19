@@ -90,13 +90,15 @@ def evaluate_tree(q):
     return values
 
 def prune_tree(values, q, K):
+    # NOTE: Prunes ENTIRE tree, leaves K remaining nodes. Should this be per node?
     len_q = len(q)
     if len_q <= K: return q
-    print(f"pruning {len_q-K} leaves...")
+    print(f"pruning {len_q-K} leaves...{K} nodes remain")
     sorted_q = [node[1] for node in sorted(zip(values, q), key=lambda x: x[0], reverse=True)][:K]
     return sorted_q
 
 def get_formatted_proof(proof_history, law_history, num=0):
+    # TODO: offset law history by one
     if num > 1: print(f"----------FINAL PROOF #{num}----------")
     else: print("----------FINAL PROOF----------")
     proof_steps = []
@@ -178,63 +180,63 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
     psuedo code params from paper:
 
     expr = expression to start evaluating on
-    K    = size limit
-    T    = step limit
-    B    = breadth limit
+    T    = step limit (tree depth)
+    B    = breadth limit (generates B candidates for the next thought step)
+    K    = size limit of level (for level-wise pruning)
     """
 
-    q = [(expr, [expr], [])] # (expr, expr_history, law_history)
-    unique_proofs = []
+    q = [(expr, [expr], [])] # BFS queue [(expr, expr_history, law_history)]
+    unique_proofs = [] # stores the proofs in (expr, expr_history, law_history) format 
 
-    for t in range(T): # each level
-        print(f"Tree Level:{t+1}/{T}")
+    for t in range(T): # step limit (tree depth)
+        print(f"TREE DEPTH:{t+1}/{T}")
 
-        values = evaluate_tree(q)
-        q = prune_tree(values, q, K)
-        new_q = []
+        new_q = [] # stores nodes for next level
 
         for item in q: # go through each thought on level
             expr_i, expr_history, law_history = item
 
             if expr_i in terminal_values or len(expr_i) == 1: # to determine if tautology or not
-                print(f"Fully reduced expression, proof done.")
                 expr, expr_history, law_history = item
                 
-                # if item not in unique_proofs: 
+                # if item not in unique_proofs: # NOTE: is this the same as is_unique?
                 if is_unique(item, unique_proofs):
+                    print(f"FULLY REDUCED EXPR, PROOF DONE.")
                     unique_proofs.append(item)
 
-                     # early stop on first proof found
+                     # early stop for first proof found
                     if early_stop:
-                        print("EARLY STOPPING, FOUND PROOF...")
+                        print("EARLY STOPPING, FOUND FIRST PROOF...")
                         for i, (expr, expr_history, law_history) in enumerate(unique_proofs):
                             formatted_proof = get_formatted_proof(expr_history, law_history, num=i+1)
                             return q, formatted_proof
                 else:
-                    print("Found non-unique proof, removing...")
+                    print("REMOVING NON-UNIQUE PROOF...")
                     
                 continue
             
-            if not verifiable: 
-                expr_deductions = llm_symbolic_deduce(expr_i, verbose)
-            else: 
-                expr_deductions = symbolic_deduce(expr_i, verbose) 
+            # generate list of deduction
+            if pure_llm: expr_deductions = llm_symbolic_deduce(expr_i, verbose) # pure llm symbolic deductions
+            else: expr_deductions = symbolic_deduce(expr_i, verbose) # normal symbolic engine
+            if verbose: print("GENERATED LIST OF DEDUCTIONS: ", expr_deductions)
 
-            if verbose: print("expr_deductions", expr_deductions)
-
+            # generate B new thoughts per node
             for i in range(B): 
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
                 llm_res = llm(message=llm_message) # send message to llm and collect its text response
                 choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
 
-                if verbose: print(f"DETAIL: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
+                if verbose: print(f"NODE DETAIL: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
                 
-                # update structures
+                # update structures and add node to BFS queue
                 expr_history_new = expr_history + [new_expr]
                 law_history_new = law_history + [new_law]
                 new_q.append((new_expr, expr_history_new, law_history_new)) 
-       
-        q = new_q
+        
+        # eval and select top nodes
+        values = evaluate_tree(new_q) # rates each node on scale of 1-10
+        q = prune_tree(values, new_q, K) # level-wise pruning
+        # q = new_q
 
     if unique_proofs: 
         for i, (expr, expr_history, law_history) in enumerate(unique_proofs):
@@ -247,10 +249,8 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
 
 def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
     if naive:
-        print("USING CHAIN OF THOUGHT")
         solve_cot(expr, max_num_steps, verbose, debug)
     else: 
-        print("USING TREE OF THOUGHT")
         return solve_tot(expr, T=T, B=B, K=K, verbose=verbose) 
 
 if __name__ == '__main__':
@@ -262,34 +262,42 @@ if __name__ == '__main__':
     parser.add_argument("--verbose", action='store_true', help="Print out states at each step")
     parser.add_argument("--cot", action='store_true', help="Boolean to use Chain of Thought")
     parser.add_argument("--claude", action='store_true', help="Boolean to use Claude-3-Haiku")
-    parser.add_argument("--T",  type=int, default=4, help="ToT Tree depth")
-    parser.add_argument("--B",  type=int, default=4, help="ToT Branching Factor")
-    parser.add_argument("--K",  type=int, default=4, help="ToT Size limit")
+    parser.add_argument("--T",  type=int, default=5, help="ToT tree depth")
+    parser.add_argument("--B",  type=int, default=3, help="ToT branching factor")
+    parser.add_argument("--K",  type=int, default=5, help="ToT max number of nodes per level")
     parser.add_argument("--early_stop", action='store_true', help="Boolean to return on first proof found")
-    parser.add_argument("--verifiable", action='store_true', help="Boolean to evaluate all expressions through symbolic engine instead of llm")
+    parser.add_argument("--pure_llm", action='store_true', help="Boolean to evaluate all expressions through llm instead of symbolic engine")
 
     args = parser.parse_args()
     
-    print(f"\nSOLVING '{args.expr}'...\n")
-    
-    if args.claude:
-        model_name = "claude-3-haiku"
-        print("Using Claude-3-Haiku")
-    else:
-        model_name = "gpt-3.5-turbo"
-        print("Using GPT-3.5-Turbo")
-
-    global T, B, K, early_stop, llm, verifiable
-    llm = partial(llm_api_call, model=model_name)
+    global T, B, K, early_stop, llm, pure_llm
     T = args.T
     B = args.B
     K = args.K
     early_stop = args.early_stop
-    verifiable = args.verifiable
+    pure_llm = args.pure_llm
+
+    if args.claude: model_name = "claude-3-haiku"
+    else: model_name = "gpt-3.5-turbo"
+    llm = partial(llm_api_call, model=model_name)
+
+    print(f"\nSOLVING: '{args.expr}'")
+    print(f"LLM: {model_name}")
+    print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}")
+    if pure_llm: 
+        print("WARNING: Not using symbolic engine, proof may have hallucinations")
+        print("ENGINE: PURE LLM")
+    else:
+        print("ENGINE: SYMBOLIC")
+    if args.cot: print("METHOD: Chain of Thought\n")
+    else: print("METHOD: Tree of Thought\n")
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
 
+
 # TODO: How should we test these?
+"""
+Test expressions:
 # CK's examples
 # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
 # expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
@@ -299,3 +307,14 @@ if __name__ == '__main__':
 # Simple examples
 # expr = "(x and y) or (x and y)"             # TAUTOLOGY
 # expr = "(x and x) or (x and x)"
+
+----------------------------------
+
+Pure LLM did output this
+python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
+Proof:
+(a or (a and b)) -> a                 Absorption
+≡ (a or (a and b)) -> a               Simplification
+≡ a -> a                              Identity
+≡ a
+"""
