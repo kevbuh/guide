@@ -2,19 +2,34 @@ from utils import booleanTree, helpers
 from ast import BoolOp, Or, And, UnaryOp, Not, Name, Constant
 from ast import walk, unparse, NodeTransformer
 import astor
+import ast
 
 # exp = "((not(x or y) and z) or True) <-> z"
+exp = "(a -> (f -> c)) -> d"
+# exp = "((a <-> (p <-> q)) <-> c) <-> d"
+# exp = "p -> (a -> b)"
+# exp = "(p -> b) -> a"
+# exp = "(p -> b) <-> a"
+# exp = "(not(b) and (a -> b)) <-> not(a)"
 # exp = "(not(x and not(y)) or ((not(y) and z))) and z"
 # exp = "(x and y) or (x and y)"
 # exp = "((not x or not not not y) or z)"
 # exp = "a or b"
 # exp = "(a and b) and c"
 # exp = "a or (b and c)"
-exp = "p or (p and q)"
+# exp = "(a or b) or ((a or b) and q)"
+
+# exp = "(not(b) and (a -> b)) -> not(a)"
+# exp = "(not (not b and not a or not b and b) or not a)"
+# exp = "((not b and not not a or b) or not a)"
+# exp = "(not a or (b or a and not b))"
+# exp = "((b or not b and a) or not a)"
+
 bTree = booleanTree(exp)
 t_util = helpers()
 nodes = bTree.parse_tree()
-print("Original expression: ", exp)
+print("Original expression:\t\t ", exp)
+print("First simplification expression: ", bTree.tree)
 print(bTree.parse_tree())
 
 class ReplaceVisitor(NodeTransformer):
@@ -33,57 +48,78 @@ class ReplaceVisitor(NodeTransformer):
         return self.generic_visit(node)
 
 parsed_code = bTree.parseTree
+assert ast.dump(ast.parse(parsed_code), indent=4) == bTree.parse_tree()
 
 for node in walk(parsed_code):
     match node:
-        case BoolOp(op=Or(), values=[a, Constant(value=0)]) | BoolOp(op=And(), values=[a, Constant(value=1)]):      # Identity Law
-            n_node = Name(id=a)
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=Or(), values=[a, Constant(value=1)]):                                                        # Domination Law
-            n_node = Constant(value=1)
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=And(), values=[a, Constant(value=0)]):                                                       # Domination Law
-            n_node = Constant(value=0)
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):                                               # Double Negation Law 
-            n_node = Name(id=a)
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=Or(), values=[a, b]):                                                                        # Commutative Law
-            n_node = BoolOp(op=Or(), values=[b, a])
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=And(), values=[a, b]):                                                                       # Commutative Law
-            n_node = BoolOp(op=And(), values=[b, a])
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=Or(), values=[BoolOp(op=Or(), values=[a, b]), c]):                                           # Associative Law
-            n_node = BoolOp(op=Or(), values=[a, BoolOp(op=Or(), values=[b, c])])
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=And(), values=[BoolOp(op=And(), values=[a, b]), c]):                                         # Associative Law
-            n_node = BoolOp(op=And(), values=[a, BoolOp(op=And(), values=[b, c])])
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[b, c])]):                                          # Distributive Law
+        case BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[b, c])]):   
+            # print("----", ast.dump(ast.parse(a), indent=4), "\n", ast.dump(ast.parse(b), indent=4), "\n", ast.dump(ast.parse(c), indent=4))                                       # Distributive Law
             n_node = BoolOp(op=Or(), values=[BoolOp(op=And(), values=[a, b]), BoolOp(op=And(), values=[a, c])])
+            # print("New node --\n", ast.dump(ast.parse(n_node), indent=4), "\n", astor.to_source(n_node))
             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+            # print("\nDistributive Law")
+            # print(ast.dump(ast.parse(replaced_tree), indent=4))
+            # print(astor.to_source(replaced_tree), "\n")
+            bTree.parseTree = replaced_tree
         case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[b, c])]):                                          # Distributive Law
             n_node = BoolOp(op=And(), values=[BoolOp(op=Or(), values=[a, b]), BoolOp(op=Or(), values=[a, c])])
             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]):                                      # Absorption Law
-            if t_util.are_subtrees_equivalent(a, objects[0]): 
-                n_node = Name(id=a)
-                replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[*objects])]):                                      # Absorption Law
-            if t_util.are_subtrees_equivalent(a, objects[0]): 
-                n_node = Name(id=a)
-                replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b])):                                             # DeMorgan's Law 1
-            n_node = BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
+            print("Distributive Law")
+        case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):                                               # Double Negation Law 
+            n_node = Name(id=a)
             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b])):                                            # DeMorgan's Law 2
-            n_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
-            replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-        case BoolOp(op=Or(), values=[*objects]) | BoolOp(op=And(), values=[*objects]):                              # Idempotent Law
-            if t_util.are_subtrees_equivalent(objects[0], objects[1]):
-                n_node = objects[0]
+        case BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), b]):                                               # Negation Law: not(a) and a = 0
+            if t_util.are_subtrees_equivalent(a, b):
+                n_node = Constant(value=0)
                 replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+                bTree.parseTree = replaced_tree
+
+# for node in walk(parsed_code):
+#     match node:
+#         case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]):                                      # Absorption Law
+#             if t_util.are_subtrees_equivalent(a, objects[0]): 
+#                 n_node = Name(id=a)
+#                 replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#                 print("Absorption Law")
+#         case BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[*objects])]):                                      # Absorption Law
+#             if t_util.are_subtrees_equivalent(a, objects[0]): 
+#                 n_node = Name(id=a)
+#                 replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#                 print("Absorption Law")
+#         case BoolOp(op=Or(), values=[a, Constant(value=0)]) | BoolOp(op=And(), values=[a, Constant(value=1)]):      # Identity Law
+#             n_node = Name(id=a)
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=Or(), values=[a, Constant(value=1)]):                                                        # Domination Law
+#             n_node = Constant(value=1)
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=And(), values=[a, Constant(value=0)]):                                                       # Domination Law
+#             n_node = Constant(value=0)
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):                                               # Double Negation Law 
+#             n_node = Name(id=a)
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=Or(), values=[a, b]):                                                                        # Commutative Law
+#             n_node = BoolOp(op=Or(), values=[b, a])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=And(), values=[a, b]):                                                                       # Commutative Law
+#             n_node = BoolOp(op=And(), values=[b, a])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=Or(), values=[BoolOp(op=Or(), values=[a, b]), c]):                                           # Associative Law
+#             n_node = BoolOp(op=Or(), values=[a, BoolOp(op=Or(), values=[b, c])])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=And(), values=[BoolOp(op=And(), values=[a, b]), c]):                                         # Associative Law
+#             n_node = BoolOp(op=And(), values=[a, BoolOp(op=And(), values=[b, c])])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b])):                                             # DeMorgan's Law 1
+#             n_node = BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b])):                                            # DeMorgan's Law 2
+#             n_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)])
+#             replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+#         case BoolOp(op=Or(), values=[*objects]) | BoolOp(op=And(), values=[*objects]):                              # Idempotent Law
+#             if t_util.are_subtrees_equivalent(objects[0], objects[1]):
+#                 n_node = objects[0]
+#                 replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
 
 # Convert the modified AST back to code
 # print(bTree.parse_tree(replaced_tree))

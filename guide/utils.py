@@ -1,4 +1,6 @@
 import ast
+import re
+import regex
 from collections import deque
 from dataclasses import dataclass
 
@@ -30,22 +32,38 @@ class booleanTree:
             p <-> q (bi-conditional): (p and q) or ((not p) and (not q))
             p -> q  (implication)   : (not p) or q 
         """
-        match self.tree:
-            # Match for bi-conditional
-            case str(x) if "<->" in x: 
-                p, q = self.tree.split('<->')
+        success = 0
+        groups = regex.search(r"(?<rec> \( (?: [^()]++ | (?&rec) )* \) )", str(self.tree), flags=regex.VERBOSE)
+        group_matches = groups.captures('rec')
+        for items in group_matches:
+            match items:
+                case str(x) if "<->" in x: 
+                    success = 1
+                    p, q = items[1:-1].split('<->', 1)
+                    p, q = p.strip(), q.strip()
+                    partial_step = "(" + p + " and " + q + ") or (not(" + p + ") and not(" + q + "))"
+                    self.tree = self.tree.replace(items, partial_step)
+                case str(x) if "->" in x:
+                    success = 1
+                    p, q = items[1:-1].split('->', 1)
+                    p, q = p.strip(), q.strip()
+                    partial_step = "(not(" + p + ") or " + q + ")"
+                    self.tree = self.tree.replace(items, partial_step)
+                case _:
+                    pass
+        
+        if success == 1:
+            self.__post_init__()
+        else:
+            if "<->" in str(self.tree):
+                p, q = self.tree.split('<->', 1)
                 p, q = p.strip(), q.strip()
-                newtree = "(" + p + " and " + q + ") or (not(" + p + ") and not(" + q + "))"
-                self.astTree = newtree
-            # Match for implication
-            case str(x) if "->" in x:
-                p, q = self.tree.split('->')
+                self.tree = "(" + p + " and " + q + ") or (not(" + p + ") and not(" + q + "))"
+            elif "->" in str(self.tree):
+                p, q = self.tree.split('->', 1)
                 p, q = p.strip(), q.strip()
-                newtree = "not(" + p + ") or " + q
-                self.astTree = newtree
-            # No matches
-            case _:
-                self.astTree = self.tree
+                self.tree = "not(" + p + ") or " + q
+            self.astTree = self.tree
 
     def parse_tree(self, astTree=None) -> ast:
         """
