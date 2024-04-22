@@ -40,11 +40,13 @@ pip install -r requirements.txt
     - [x] implement common laws on the AST
     - [x] simplification engine
     - [ ] complete implication and bi-conditional laws
-    - [ ] fix expression bugs (below in bug tracker)
+    - [x] fix expression bugs (below in bug tracker)
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
-    - [ ] Look at entire tree
+    - [ ] look at entire tree
+    - [ ] test with other prompts
+    - [ ] choose law with respect to the probabilities
 
 ## Usage
 
@@ -219,12 +221,12 @@ $\Leftrightarrow: \text{Bi-Conditional}$
     - $A \oplus B = \lnot(A \oplus B)$
     - $A \odot B = (A \land B) \lor (\lnot A \land \lnot B)$ -->
 
-## Bug tracker
+<!-- ## Bug tracker -->
 
-- Symbolic Engine
-    - Absorption Law doesn't trigger for "(a and (a or b))"
-    - Absorption Law doesn't trigger for "(a or (a and b)) -> a"
-    - Absorption Law doesn't trigger for "not((a or (a and b)) -> a)"
-    - Absorption Law doesn't trigger for "(((y and x) or x) and y)"
-    - Absorption Law doesn't trigger for "((x or (x and y)) and y)"
-    - Idempotent Law doesn't work for ((x and y) or (x and y))
+<!-- - Symbolic Engine -->
+<!-- - Absorption Law doesn't trigger for "(a and (a or b))" -->
+<!-- - Absorption Law doesn't trigger for "(a or (a and b)) -> a" -->
+<!-- - Absorption Law doesn't trigger for "not((a or (a and b)) -> a)" -->
+<!-- - Absorption Law doesn't trigger for "(((y and x) or x) and y)" -->
+<!-- - Absorption Law doesn't trigger for "((x or (x and y)) and y)" -->
+<!-- - Idempotent Law doesn't work for "((x and y) or (x and y))" -->
