@@ -4,9 +4,10 @@ import argparse
 from functools import partial
 
 from llm import llm_api_call
-from symbolic import symbolic_deduce, simplify
+from symbolic import symbolic_deduce, simplify, apply_bi_imp
 from prompts import propose_prompt, propose_prompt_short, value_prompt, deduction_prompt
 
+# TODO: how do we determine if it can't be simplified further and is a terminal value like "x or y and z"
 TERMINAL_VALUES = {"True", "False", "1", "0", "x", "y", "x and y", "y and x", "x or y", "y or x"}
 
 def create_propose_prompt(expr, expr_deductions):
@@ -25,7 +26,7 @@ def create_propose_prompt(expr, expr_deductions):
     choices = "".join(choices_list)
     llm_message = f"{expr}\n{choices}{propose_prompt_short}"
 
-    # TODO: test with other prompts
+    # TODO: experiment with other prompts
     # llm_message = propose_prompt.format(expr=expr, choices=choices)
     # print("LLM_MESSAGE",llm_message)
 
@@ -203,10 +204,16 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
     B    = breadth limit (generates B candidates for the next thought step)
     K    = size limit of level (for level-wise pruning)
     """
+    expr = expr.strip()
 
-    q = [(expr, [expr], [])] # BFS queue [(expr, expr_history, law_history)]
+    res = apply_bi_imp(expr, verbose) # returns (law, simplified_expr)
+    if res != (None, None):
+        q = [((res[1]), [expr, res[1]], [res[0]])] # BFS queue [(expr, expr_history, law_history)]
+    else:
+        q = [(expr, [expr], [])] # BFS queue [(expr, expr_history, law_history)]
+
     unique_proofs = [] # stores the proofs in (expr, expr_history, law_history) format 
-
+    
     for t in range(T): # step limit (tree depth)
         print(f"TREE DEPTH:{t+1}/{T}")
         new_q = [] # stores nodes for next level
@@ -221,32 +228,34 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
             if not expr_deductions: 
                 print("NO MORE DEDUCTIONS FOUND...")
                 # check to see if you can reduce expressions further if no deductions could be applied
-                # if not simplify(expr=expr_i, item_history=item, verbose=verbose):
-                #     print("COULDN'T SIMPLIFY OR DEDUCE FURTHER EXPRESSIONS, END OF PROOF...")
-                #     return check_proof(item, unique_proofs, q)
-                break
+                if not simplify(expr=expr_i, item_history=item, verbose=verbose):
+                    print("COULDN'T SIMPLIFY OR DEDUCE FURTHER EXPRESSIONS, END OF PROOF...")
+                    return check_proof(item, unique_proofs, q)
+                continue
 
             # generate B new thoughts per node
-            for i in range(B): 
+            for i in range(B):
                 llm_message, choice_dict = create_propose_prompt(expr_i, expr_deductions) # output law and expression in a numbered list and create prompt
                 llm_res = llm(message=llm_message) # send message to llm and collect its text response
-                _, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
+                if choice_dict:
+                    choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message) # TODO: make it with *respect to the probabilities* and have it print values
 
-                if verbose: print(f"NODE DETAIL: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
-                
-                # update structures and add node to BFS queue
-                expr_history_new = expr_history + [new_expr]
-                law_history_new = law_history + [new_law]
-                item = (new_expr, expr_history_new, law_history_new)
+                    if verbose: print(f"NEW NODE: {new_expr=}, {new_law=}, {expr_history=}, {law_history=}")
+                    
+                    # update structures and add node to BFS queue
+                    del choice_dict[choice_number] # remove current choice from possible options
+                    expr_history_new = expr_history + [new_expr]
+                    law_history_new = law_history + [new_law]
+                    item = (new_expr, expr_history_new, law_history_new)
 
-                # simplify if possible, NOTE: should this go before or after symbolic engine?
-                item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
+                    # simplify if possible
+                    item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
 
-                res = check_proof(item, unique_proofs, q)
-                if early_stop and res != (None, None):
-                    return res
+                    res = check_proof(item, unique_proofs, q)
+                    if early_stop and res != (None, None):
+                        return res
 
-                new_q.append(item) 
+                    new_q.append(item) 
         
         # eval and select top nodes
         values = evaluate_tree(new_q) # rates each node on scale of 1-10
@@ -301,30 +310,29 @@ if __name__ == '__main__':
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
     else:
         print("ENGINE: symbolic")
-    if args.cot: print("METHOD: Chain of Thought")
-    else: print("METHOD: Tree of Thought")
+    if args.cot: print("METHOD: chain of thoughts")
+    else: print("METHOD: tree of thoughts")
     print("----------------------------")
-
 
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
 
 
-# TODO: How should we test these?
+# TODO: How should we test these? --> assert it found x?
 """
-Test expressions:
-# CK's examples
+CK's examples
 # expr = "(a or (a and b)) -> a"              # TAUTOLOGY
 # expr = "((not b) and (a -> b)) -> (not a)"  # TAUTOLOGY
 # expr = "not((a or (a and b)) -> a)"         # NOT TAUTOLOGY
 # expr = "(((y and x) or x) and y)"           # NOT TAUTOLOGY
 
-# Simple examples
+Simple examples
 # expr = "(x and y) or (x and y)"             # TAUTOLOGY
 # expr = "(x and x) or (x and x)"
 
 ----------------------------------
 
-Pure LLM did output this
+Pure LLM outputed this:
+
 python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
 Proof:
 (a or (a and b)) -> a                 Absorption

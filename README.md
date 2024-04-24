@@ -35,15 +35,16 @@ pip install -r requirements.txt
     - [x] stop when found first proof
     - [x] add expr_history for more accurate value ratings
     - [x] Flag to choose all llm or use symbolic engine 
-- [ ] Symbolic engine
+- [x] Symbolic engine
     - [x] expression to AST representation
     - [x] implement common laws on the AST
     - [x] simplification engine
-    - [ ] complete implication and bi-conditional laws
+    - [x] complete implication and bi-conditional laws
     - [x] fix expression bugs (below in bug tracker)
 - [ ] Write testcases
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
+    - [x] remove already chosen options
     - [ ] look at entire tree
     - [ ] test with other prompts
     - [ ] choose law with respect to the probabilities
@@ -63,9 +64,9 @@ Output
 SOLVING: '(x and x) or (x and x)'
 LLM: gpt-3.5-turbo
 PARAMS: T=5, B=3, K=5, early_stop=False, pure_llm=False
-ENGINE: SYMBOLIC
-METHOD: Tree of Thought
-
+ENGINE: symbolic
+METHOD: tree of thoughts
+----------------------------
 TREE DEPTH:1/5
 TREE DEPTH:2/5
 pruning 4 leaves...
