@@ -261,9 +261,9 @@ def symbolic_deduce(expr, verbose=False):
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code):
         match node:
-            case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), b]) | BoolOp(op=Or(), values=[b, UnaryOp(op=Not(), operand=a)]):
+            case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=b), a]) | BoolOp(op=Or(), values=[a, UnaryOp(op=Not(), operand=b)]):
                 if t_util.are_subtrees_equivalent(a, b):
-                    n_node = Constant(value=0)
+                    n_node = Name(id=a)
                     replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
                     new_expressions["Negation Law OR"].append(modified_code[:-1]) # -1 to get rid of new line
