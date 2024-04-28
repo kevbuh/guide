@@ -48,6 +48,9 @@ pip install -r requirements.txt
     - [ ] look at entire tree
     - [ ] test with other prompts
     - [ ] choose law with respect to the probabilities
+    - [ ] prune based off of >75 score
+    - [ ] save state into file so you can resume process later
+
 
 ## Usage
 
@@ -102,23 +105,26 @@ Proof:
 
 CLI Arguments
 ```bash
-usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug] [--verbose]
-                       [--cot] [--claude] [--T T] [--B B] [--K K] [--early_stop] [--pure_llm]
+usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug]
+                       [--verbose] [--cot] [--claude] [--T T] [--B B] [--K K]
+                       [--early_stop] [--pure_llm] [--del_choice]
 
 options:
   -h, --help            show this help message and exit
   --expr EXPR           The expression to evaluate
   --num_steps NUM_STEPS
                         Number of proof steps
-  --debug               Boolean to print debug statements
+  --debug               Print debug statements
   --verbose             Print out states at each step
-  --cot                 Boolean to use Chain of Thought
-  --claude              Boolean to use Claude-3-Haiku
+  --cot                 Use Chain of Thought
+  --claude              Use Claude-3-Haiku
   --T T                 ToT tree depth
   --B B                 ToT branching factor
   --K K                 ToT max number of nodes per level
-  --early_stop          Boolean to return on first proof found
-  --pure_llm            Boolean to evaluate all expressions through llm instead of symbolic engine
+  --early_stop          Return on first proof found
+  --pure_llm            Evaluate all expressions through llm instead of
+                        symbolic engine
+  --del_choice          Delete law option after LLM choice
 ```
 
 ## Symbolic Logic
