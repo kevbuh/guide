@@ -70,10 +70,6 @@ def simplify(expr, item_history=None, verbose=False):
     tree = parseTree
     law_code_tuples = []
 
-    # TODO: do unit tests for these simplifications
-    # TODO: should this symbolic try to fully reduce? or only do one reduction at a time?
-    # TODO: handle multiple simplifications at a time
-
     for node in walk(tree):
         match node:
             case BoolOp(op=Or(), values=[a, Constant(value=0)]) | BoolOp(op=Or(), values=[Constant(value=0), a]): # a or 0 = a | 0 or a = a
@@ -133,10 +129,6 @@ def simplify(expr, item_history=None, verbose=False):
             law_history = law_history + [law]
             final_expr = code
         return (final_expr, expr_history, law_history)
-        # assert len(law_code_tuples) == 1, f"simplify() has too many simplifications"
-        # expr_history_new = expr_history + [law_code_tuples[0][1]]
-        # law_history_new = law_history + [law_code_tuples[0][0]] 
-        # return (law_code_tuples[0][1], expr_history_new, law_history_new)
     else:
         return None
     
@@ -215,7 +207,6 @@ def symbolic_deduce(expr, verbose=False):
 
     # check if expr is unreducable expression
     if is_reduced(expr):
-        print("&&&&&&&here")
         return new_expressions
 
     # ----------APPLIES LAWS ONTO AST ONE AT A TIME-----------
