@@ -1,7 +1,7 @@
 # Guide
 
 <div align="center">
-    <img src="./assets/guided llm v4.svg" alt="System Overview" width="600"/>
+    <img src="./assets/guided llm v5.svg" alt="System Overview" width="600"/>
 </div>
 
 Logical equivalence symbolic engine guided by tree-of-thoughts 

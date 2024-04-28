@@ -212,7 +212,8 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
             q = prev_q
     else:
         # start new ckpt file
-        with open(ckpt_file, 'w'): pass
+        with open(ckpt_file, 'w'): 
+            pass
         
         # check and apply implication/biconditional
         res = apply_bi_imp(expr, verbose) # returns (law, simplified_expr)
@@ -251,12 +252,11 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
                     law_history_new = law_history + [new_law]
                     item = (new_expr, expr_history_new, law_history_new)
 
-                    # simplify if possible
-                    
+                    # simplify if possible                    
                     item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
 
                     if verbose: print(f"NEW NODE [level:{t+1} ({i+1}/{B})]: new_expr={item[0]}, {new_law=}, {expr_history=}, {law_history=}")
-                    # not (not a or b)
+
                     res = check_proof(item, unique_proofs, q)
 
                     if early_stop and res != (None, None):

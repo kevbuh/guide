@@ -3,13 +3,15 @@ import time
 from dotenv import load_dotenv
 
 def llm_api_call(message, system="", model="gpt-3.5-turbo"):
+    """
+    llm api call
+    make set up your API keys in a .env file
+    """
     assert message != "", "ERROR: llm_api_call() 'message' param should not be null"
-    # print("LLM API CALL")
-    # if claude:
     if model == "claude-3-haiku":
         import anthropic
         load_dotenv()
-        api_key = os.getenv('ANTHROPIC_API_KEY') # set up keys in a .env file
+        api_key = os.getenv('ANTHROPIC_API_KEY') 
         client = anthropic.Anthropic(api_key=api_key)
         for _ in range(10):
             try: 
@@ -27,7 +29,6 @@ def llm_api_call(message, system="", model="gpt-3.5-turbo"):
             except:
                 print("Sleeping for 10 seconds...")
                 time.sleep(10)
-        
     elif model == "gpt-3.5-turbo": 
         import openai
         load_dotenv()
@@ -51,28 +52,3 @@ if __name__ == '__main__':
 
     res = llm_api_call(message="((not(x or y) and z) or True) <-> z", claude=not args.gpt)
     print(res) 
-
-    """
-    Haiku example response:
-    Message(id='msg_01H6C9fXicQGgYidinRFZhzN', content=[ContentBlock(text=
-
-    'The given expression is:
-    ((not(x or y) and z) or True) <-> z
-    To evaluate the truth table for this expression, we need to consider all possible combinations of the variables x, y, and z.
-    The truth table would look like this:
-    | x | y | z | not(x or y) | not(x or y) and z | (not(x or y) and z) or True | (not(x or y) and z) or True <-> z |
-    |---|---|---|-------------|------------------|----------------------------|---------------------------------|
-    | F | F | F | T           | F                | T                          | T <-> F                         |
-    | F | F | T | T           | T                | T                          | T <-> T                         |
-    | F | T | F | T           | F                | T                          | T <-> F                         |
-    | F | T | T | T           | T                | T                          | T <-> T                         |
-    | T | F | F | F           | F                | T                          | T <-> F                         |
-    | T | F | T | F           | F                | T                          | T <-> T                         |
-    | T | T | F | F           | F                | T                          | T <-> F                         |
-    | T | T | T | F           | F                | T                          | T <-> T                         |
-
-    From the truth table, we can see that the expression ((not(x or y) and z) or True) <-> z is a tautology, meaning it is
-    always true regardless of the values of x, y, and z.'
-
-    , type='text')], model='claude-3-haiku-20240307', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(input_tokens=23, output_tokens=378))
-    """
