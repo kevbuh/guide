@@ -47,8 +47,14 @@ class TestSimplificationEngine(unittest.TestCase):
         a = simplify(expr="(x and 1) or 0", item_history=("", [], []))
         res = ('x', ['(x and 1)', 'x'], ['Simplification Law', 'Simplification Law'])
         self.assertEqual(a,res)
-        
 
+        a = simplify(expr="not 0", item_history=("", [], []))
+        res = ('(1)', ['(1)'], ['Simplification Law'])
+        self.assertEqual(a,res)
+
+        a = simplify(expr="not 1", item_history=("", [], []))
+        res = ('(0)', ['(0)'], ['Simplification Law'])
+        self.assertEqual(a,res)        
 
 if __name__ == '__main__':
     unittest.main()
