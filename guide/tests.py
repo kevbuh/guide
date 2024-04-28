@@ -1,5 +1,5 @@
 import unittest
-from symbolic import is_reduced
+from symbolic import is_reduced, simplify
 
 class TestIsReduced(unittest.TestCase):
     def test_is_reduced(self):
@@ -17,6 +17,38 @@ class TestIsReduced(unittest.TestCase):
         self.assertFalse(is_reduced("(y and x or 1)"), f"ERR: (y and x or 1) failed")
         self.assertFalse(is_reduced("(x or 1)"), f"ERR: (x or 1) failed")
         self.assertFalse(is_reduced("(1 or x)"), f"ERR: (1 or x) failed")
+
+class TestSimplificationEngine(unittest.TestCase):
+    def test_simplify(self):        
+        a = simplify(expr="x or 0", item_history=("", [], []))
+        self.assertEqual(a, ('x', ['x'], ['Simplification Law']))
+
+        a = simplify(expr="0 or x", item_history=("", [], []))
+        self.assertEqual(a, ('x', ['x'], ['Simplification Law']))
+
+        a = simplify(expr="x or 1", item_history=("", [], []))
+        self.assertEqual(a, ('(1)', ['(1)'], ['Simplification Law']))
+
+        a = simplify(expr="1 or x", item_history=("", [], []))
+        self.assertEqual(a, ('(1)', ['(1)'], ['Simplification Law']))
+
+        a = simplify(expr="x and 1", item_history=("", [], []))
+        self.assertEqual(a, ('x', ['x'], ['Simplification Law']))
+
+        a = simplify(expr="1 and x", item_history=("", [], []))
+        self.assertEqual(a, ('x', ['x'], ['Simplification Law']))
+
+        a = simplify(expr="x and 0", item_history=("", [], []))
+        self.assertEqual(a, ('(0)', ['(0)'], ['Simplification Law']))
+
+        a = simplify(expr="0 and x", item_history=("", [], []))
+        self.assertEqual(a, ('(0)', ['(0)'], ['Simplification Law']))
+        
+        a = simplify(expr="(x and 1) or 0", item_history=("", [], []))
+        res = ('x', ['(x and 1)', 'x'], ['Simplification Law', 'Simplification Law'])
+        self.assertEqual(a,res)
+        
+
 
 if __name__ == '__main__':
     unittest.main()
