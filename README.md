@@ -107,7 +107,7 @@ CLI Arguments
 ```bash
 usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug]
                        [--verbose] [--cot] [--claude] [--T T] [--B B] [--K K]
-                       [--early_stop] [--pure_llm] [--del_choice]
+                       [--early_stop] [--pure_llm] [--del_choice] [--ckpt]
 
 options:
   -h, --help            show this help message and exit
@@ -125,6 +125,7 @@ options:
   --pure_llm            Evaluate all expressions through llm instead of
                         symbolic engine
   --del_choice          Delete law option after LLM choice
+  --ckpt                Resume from last q in guide/ckpt.txt
 ```
 
 ## Symbolic Logic
