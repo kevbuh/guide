@@ -5,3 +5,4 @@ __pycache__/*
 misc/*
 venv
 *.pyc
+guide/ckpt.txt

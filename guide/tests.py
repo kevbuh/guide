@@ -54,7 +54,11 @@ class TestSimplificationEngine(unittest.TestCase):
 
         a = simplify(expr="not 1", item_history=("", [], []))
         res = ('(0)', ['(0)'], ['Simplification Law'])
-        self.assertEqual(a,res)        
+        self.assertEqual(a,res)
+
+        a = simplify(expr="not not x", item_history=("", [], []))
+        res = ('x', ['x'], ['Simplification Law (Double Negation)'])
+        self.assertEqual(a,res)
 
 if __name__ == '__main__':
     unittest.main()
