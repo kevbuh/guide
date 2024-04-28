@@ -333,10 +333,14 @@ if __name__ == '__main__':
     proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
 
 
-# TODO: How should we test these? --> assert unique_proofs != []?
 """
-CK's examples
-# expr = "(a or (a and b)) -> a"              # TAUTOLOGY, FOUND PROOF down to a
+---------------------------proof_engine outputs------------------------------------------
+# TODO: How should we test these? --> assert unique_proofs != []?
+
+
+
+
+expr = "(a or (a and b)) -> a" # TAUTOLOGY, FOUND PROOF
 ----------FINAL PROOF----------
 Proof:
 (a or (a and b)) -> a
@@ -348,8 +352,7 @@ Proof:
 
 
 
-expr = "(not b and (a -> b)) -> not a"  # TAUTOLOGY
-python3 guide/proof_engine.py --early_stop --verbose --T=25 --del_choice --expr="(not b and (a -> b)) -> not a"
+expr = "(not b and (a -> b)) -> not a" # TAUTOLOGY, FOUND PROOF w/ command 'python3 guide/proof_engine.py --early_stop --verbose --T=25 --del_choice --expr="(not b and (a -> b)) -> not a"'
 ----------FINAL PROOF----------
 Proof:
 (not b and (a -> b)) -> not a
@@ -365,8 +368,7 @@ Proof:
 
 
 
-
-# expr = "not((a or (a and b)) -> a)"         # NOT TAUTOLOGY
+expr = "not((a or (a and b)) -> a)" # NOT TAUTOLOGY
 ----------FINAL PROOF----------
 Proof:
 not((a or (a and b)) -> a)
@@ -380,7 +382,7 @@ not((a or (a and b)) -> a)
 
 
 
-# expr = "(((y and x) or x) and y)"           # NOT TAUTOLOGY
+expr = "(((y and x) or x) and y)" # NOT TAUTOLOGY
 ----------FINAL PROOF----------
 Proof:
 (((y and x) or x) and y)
@@ -389,17 +391,10 @@ Proof:
 ≡ (y and x)                           Absorption Law 1
 
 
+---------------------------------------------------------------------
 
 
-
-Simple examples
-# expr = "(x and y) or (x and y)"             # TAUTOLOGY
-# expr = "(x and x) or (x and x)"
-
-----------------------------------
-
-Pure LLM outputed this:
-
+Pure llm (no symbolic) results:
 python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
 Proof:
 (a or (a and b)) -> a                 Absorption
