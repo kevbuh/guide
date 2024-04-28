@@ -4,9 +4,7 @@
     <img src="./assets/guided llm v4.svg" alt="System Overview" width="600"/>
 </div>
 
-
 Logical equivalence symbolic engine guided by tree-of-thoughts 
-
 
 ## Setup
 ```bash
@@ -41,16 +39,19 @@ pip install -r requirements.txt
     - [x] simplification engine
     - [x] complete implication and bi-conditional laws
     - [x] fix expression bugs (below in bug tracker)
+- [x] Solve CK's hard expressions
 - [ ] Write testcases
+    - [x] simplify() (Simplification engine)
+    - [x] is_reduced()
+    - [ ] proof_engine()
 - [ ] Set up experiment suite to track model performance
 - [ ] Start experimenting with how to improve ToT
     - [x] remove already chosen options
+    - [x] save state into file so you can resume process later
     - [ ] look at entire tree
     - [ ] test with other prompts
     - [ ] choose law with respect to the probabilities
     - [ ] prune based off of >75 score
-    - [ ] save state into file so you can resume process later
-
 
 ## Usage
 

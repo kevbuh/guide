@@ -60,17 +60,21 @@ def simplify(expr, item_history=None, verbose=False):
     item_history (tuple, optional): Contains previous expressions and laws used.
     verbose (bool, optional): Print verbose debugging information.
     """
+    if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
+
     if type(expr) == str:
         parseTree = ast.parse(expr, mode='eval')
     else:
         raise Exception(f"Expr {expr} should be string")
-        
+    
     tree = parseTree
     law_code_tuples = []
 
-    # TODO: do unit tests to test simplifications
+    # TODO: do unit tests for these simplifications
+    # TODO: should this symbolic try to fully reduce? or only do one reduction at a time?
+    # TODO: handle multiple simplifications at a time
 
-    for node in walk(tree): 
+    for node in walk(tree):
         match node:
             case BoolOp(op=Or(), values=[a, Constant(value=0)]) | BoolOp(op=Or(), values=[Constant(value=0), a]): # a or 0 = a | 0 or a = a
                 new_node = Name(id=a)
@@ -78,8 +82,8 @@ def simplify(expr, item_history=None, verbose=False):
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
 
-            case BoolOp(op=Or(), values=[a, Constant(value=1)]) | BoolOp(op=Or(), values=[Constant(value=1), a]): # a or 1 = a | 1 or a = a
-                new_node = Name(id=a)
+            case BoolOp(op=Or(), values=[a, Constant(value=1)]) | BoolOp(op=Or(), values=[Constant(value=1), a]): # a or 1 = 1 | 1 or a = 1
+                new_node = Constant(value=1)
                 replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
@@ -96,15 +100,43 @@ def simplify(expr, item_history=None, verbose=False):
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
 
-    if verbose: print(f"SIMPLIFICATION OUTPUT {expr=}: {law_code_tuples}")
+            # not 0 = 1
+            case UnaryOp(op=Not(), operand=Constant(value=0)):
+                new_node = Constant(value=1)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+
+            # not 1 = 0
+            case UnaryOp(op=Not(), operand=Constant(value=1)):
+                new_node = Constant(value=0)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
+
+            # Double Negation Law 
+            case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):
+                n_node = Name(id=a)
+                replaced_tree = ReplaceVisitor(node, n_node).visit(tree)
+                modified_code = astor.to_source(replaced_tree)
+                modified_code = astor.to_source(replaced_tree)
+                law_code_tuples.append(("Simplification Law (Double Negation)", modified_code[:-1]))
+
+    if verbose and law_code_tuples != []: print(f"SIMPLIFICATION OUTPUT {expr=}: {law_code_tuples}")
 
     # update with new expr and law
     if law_code_tuples != []:
         _, expr_history, law_history = item_history
-        assert len(law_code_tuples) == 1, f"simplify() has too many simplifications"
-        expr_history_new = expr_history + [law_code_tuples[0][1]]
-        law_history_new = law_history + [law_code_tuples[0][0]] 
-        return (law_code_tuples[0][1], expr_history_new, law_history_new)
+        final_expr = None
+        for law,code in law_code_tuples:
+            expr_history = expr_history + [code]
+            law_history = law_history + [law]
+            final_expr = code
+        return (final_expr, expr_history, law_history)
+        # assert len(law_code_tuples) == 1, f"simplify() has too many simplifications"
+        # expr_history_new = expr_history + [law_code_tuples[0][1]]
+        # law_history_new = law_history + [law_code_tuples[0][0]] 
+        # return (law_code_tuples[0][1], expr_history_new, law_history_new)
     else:
         return None
     
@@ -127,6 +159,27 @@ def apply_bi_imp(expr, verbose=False):
             return ("Implication Law", simplified_expr)
     return (None, None)
 
+def is_reduced(expr):
+    """ check if expr is unreducable expression """
+    if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
+
+    bTree = booleanTree(expr)
+    bTree.parse_tree()
+    parsed_code = bTree.parseTree
+
+    vartree = []
+    for node in walk(parsed_code):
+        match node:
+            case Name(id=a):
+                vartree.append(a)
+            case Constant(value=value):
+                vartree.append(str(value))
+
+    if len(vartree) == 1 or (sorted(list(set(vartree))) == sorted(vartree) and '0' not in vartree and '1' not in vartree):
+        print(f"{expr=} cannot be reduced further...")
+        return True
+    return False
+
 def symbolic_deduce(expr, verbose=False):
     """
     Creates logical expressions for each logical law 
@@ -146,6 +199,7 @@ def symbolic_deduce(expr, verbose=False):
     """
 
     # ----------CREATE AST-----------
+    if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
 
     bTree = booleanTree(expr)
     t_util = helpers()
@@ -159,25 +213,29 @@ def symbolic_deduce(expr, verbose=False):
     if verbose: print("SYMBOLIC ENGINE input :", expr)
     if verbose: print("SYMBOLIC ENGINE detail:")
 
+    # check if expr is unreducable expression
+    if is_reduced(expr):
+        print("&&&&&&&here")
+        return new_expressions
+
     # ----------APPLIES LAWS ONTO AST ONE AT A TIME-----------
 
     # Commutative Law
-    for node in walk(parsed_code): # BFS traversal of the tree
+    for node in walk(parsed_code):
         match node:
             case BoolOp(op=Or(), values=[a, b]):
                 new_node = BoolOp(op=Or(), values=[b, a])
-                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                modified_code = astor.to_source(replaced_tree)
-                new_expressions["Commutative Law OR"].append(modified_code[:-1])
-                if verbose: print(f" - Applying Commutative Law OR: {expr} = {modified_code[:-1]}")
-
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code) # replace node with new_node
+                modified_code = astor.to_source(replaced_tree) # re-evalaluate
+                new_expressions["Commutative Law OR"].append(modified_code[:-1]) # -1 to get rid of new line
+                if verbose: print(f" - Applying Commutative Law OR: {expr} = {modified_code[:-1]}") 
+            
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code): 
         match node:
             case BoolOp(op=And(), values=[a, b]):
                 new_node = BoolOp(op=And(), values=[b, a])
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                #   print("REPLACED TREE", ast.dump(replaced_tree))
                 modified_code = astor.to_source(replaced_tree)
                 new_expressions["Commutative Law AND"].append(modified_code[:-1])
                 if verbose: print(f" - Applying Commutative Law AND: {expr} = {modified_code[:-1]}")
@@ -190,7 +248,7 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = BoolOp(op=Or(), values=[a, BoolOp(op=Or(), values=[b, c])])
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["Associative Law OR"].append(modified_code[:-1])
+                new_expressions["Associative Law OR"].append(modified_code[:-1]) 
                 if verbose: print(f" - Applying Associative Law: {expr} = {modified_code[:-1]}")
 
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -232,19 +290,8 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = Name(id=a)
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["Identity Law"].append(modified_code[:-1]) # -1 to get rid of new line
+                new_expressions["Identity Law"].append(modified_code[:-1]) 
                 if verbose: print(f" - Applying Identity Law: {expr} = {modified_code[:-1]}")
-
-    # Double Negation Law 
-    parsed_code = deepcopy(parsed_code_deepcopy)
-    for node in walk(parsed_code): 
-        match node:
-            case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):
-                n_node = Name(id=a)
-                replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
-                modified_code = astor.to_source(replaced_tree)
-                new_expressions["Double Negation Law "].append(modified_code[:-1])
-                if verbose: print(f" - Applying Double Negation Law : {expr} = {modified_code[:-1]}")
     
     # Negation Law: not(a) and a = 0 | a and not(a) = 0
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -255,7 +302,7 @@ def symbolic_deduce(expr, verbose=False):
                     n_node = Constant(value=0)
                     replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
-                    new_expressions["Negation Law AND"].append(modified_code[:-1]) # -1 to get rid of new line
+                    new_expressions["Negation Law AND"].append(modified_code[:-1]) 
                     if verbose: print(f" - Applying Negation Law AND: {expr} = {modified_code[:-1]}")
     
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -266,7 +313,7 @@ def symbolic_deduce(expr, verbose=False):
                     n_node = Name(id=a)
                     replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
-                    new_expressions["Negation Law OR"].append(modified_code[:-1]) # -1 to get rid of new line
+                    new_expressions["Negation Law OR"].append(modified_code[:-1]) 
                     if verbose: print(f" - Applying Negation Law OR: {expr} = {modified_code[:-1]}")
 
     # Idempotent Law
@@ -276,7 +323,6 @@ def symbolic_deduce(expr, verbose=False):
             case BoolOp(op=Or(), values=[*objects]):
                 if t_util.are_subtrees_equivalent(objects[0], objects[1]):
                     new_node = objects[0]
-                    #   print("NEW NODE", ast.dump(new_node))
                     replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
                     new_expressions["Idempotent Law OR"].append(modified_code[:-1])
@@ -300,8 +346,8 @@ def symbolic_deduce(expr, verbose=False):
             case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[*objects])]) | BoolOp(op=Or(), values=[BoolOp(op=And(), values=[*objects]), a]):
                 if t_util.are_subtrees_equivalent(a, objects[0]): 
                     new_node = Name(id=a)
-                    replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code) # replace node with new_node
-                    modified_code = astor.to_source(replaced_tree) # re-evalaluate
+                    replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                    modified_code = astor.to_source(replaced_tree) 
                     new_expressions["Absorption Law 1"].append(modified_code[:-1])
                     if verbose: print(f" - Applying Absorption Law 1: {expr} = {modified_code[:-1]}")
 
