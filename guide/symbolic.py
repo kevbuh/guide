@@ -167,7 +167,11 @@ def is_reduced(expr):
             case Constant(value=value):
                 vartree.append(str(value))
 
-    if len(vartree) == 1 or (sorted(list(set(vartree))) == sorted(vartree) and '0' not in vartree and '1' not in vartree):
+    can_simplify = simplify(expr=expr, item_history=("", [], []))
+    has_unique_vars = sorted(list(set(vartree))) == sorted(vartree)
+    
+    # TODO: is this the right check?
+    if len(vartree) == 1 or (not can_simplify and has_unique_vars and '0' not in vartree and '1' not in vartree):
         print(f"{expr=} cannot be reduced further...")
         return True
     return False
@@ -204,32 +208,6 @@ def symbolic_deduce(expr, verbose=False):
 
     if verbose: print("SYMBOLIC ENGINE input :", expr)
     if verbose: print("SYMBOLIC ENGINE detail:")
-
-    # check if expr is unreducable expression
-    if is_reduced(expr):
-        return new_expressions
-
-    # ----------APPLIES LAWS ONTO AST ONE AT A TIME-----------
-
-    # Commutative Law
-    for node in walk(parsed_code):
-        match node:
-            case BoolOp(op=Or(), values=[a, b]):
-                new_node = BoolOp(op=Or(), values=[b, a])
-                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code) # replace node with new_node
-                modified_code = astor.to_source(replaced_tree) # re-evalaluate
-                new_expressions["Commutative Law OR"].append(modified_code[:-1]) # -1 to get rid of new line
-                if verbose: print(f" - Applying Commutative Law OR: {expr} = {modified_code[:-1]}") 
-            
-    parsed_code = deepcopy(parsed_code_deepcopy)
-    for node in walk(parsed_code): 
-        match node:
-            case BoolOp(op=And(), values=[a, b]):
-                new_node = BoolOp(op=And(), values=[b, a])
-                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                modified_code = astor.to_source(replaced_tree)
-                new_expressions["Commutative Law AND"].append(modified_code[:-1])
-                if verbose: print(f" - Applying Commutative Law AND: {expr} = {modified_code[:-1]}")
 
     # Associative Law
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -296,12 +274,13 @@ def symbolic_deduce(expr, verbose=False):
                     new_expressions["Negation Law AND"].append(modified_code[:-1]) 
                     if verbose: print(f" - Applying Negation Law AND: {expr} = {modified_code[:-1]}")
     
+    # Negation Law: not a or a = 1 | a or not a = 1
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code):
         match node:
             case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=b), a]) | BoolOp(op=Or(), values=[a, UnaryOp(op=Not(), operand=b)]):
                 if t_util.are_subtrees_equivalent(a, b):
-                    n_node = Name(id=a)
+                    n_node = Constant(value=1)
                     replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
                     new_expressions["Negation Law OR"].append(modified_code[:-1]) 
@@ -394,6 +373,33 @@ def symbolic_deduce(expr, verbose=False):
                 modified_code = astor.to_source(replaced_tree)
                 new_expressions["DeMorgan Law 2"].append(modified_code[:-1])
                 if verbose: print(f" - Applying DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
+
+    # check if expr is unreducable expression
+    can_simplify = simplify(expr=expr, item_history=("", [], []))
+    if is_reduced(expr) and not can_simplify:
+        return new_expressions
+
+    # ----------APPLIES LAWS ONTO AST ONE AT A TIME-----------
+
+    # Commutative Law
+    for node in walk(parsed_code):
+        match node:
+            case BoolOp(op=Or(), values=[a, b]):
+                new_node = BoolOp(op=Or(), values=[b, a])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code) # replace node with new_node
+                modified_code = astor.to_source(replaced_tree)                    # re-evalaluate
+                new_expressions["Commutative Law OR"].append(modified_code[:-1])  # -1 to get rid of new line
+                if verbose: print(f" - Applying Commutative Law OR: {expr} = {modified_code[:-1]}") 
+            
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code): 
+        match node:
+            case BoolOp(op=And(), values=[a, b]):
+                new_node = BoolOp(op=And(), values=[b, a])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["Commutative Law AND"].append(modified_code[:-1])
+                if verbose: print(f" - Applying Commutative Law AND: {expr} = {modified_code[:-1]}")
 
     if verbose: print("SYMBOLIC ENGINE OUTPUT:", new_expressions)
     return new_expressions

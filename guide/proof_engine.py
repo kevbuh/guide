@@ -232,9 +232,13 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
             # generate list of deduction
             if pure_llm: expr_deductions = llm_symbolic_deduce(expr_i, verbose) # pure llm symbolic deductions
             else: expr_deductions = symbolic_deduce(expr_i, verbose) # normal symbolic engine
-
+            
             if not expr_deductions:
-                check_proof(item, unique_proofs, q, done=False)
+                can_simplify = simplify(expr=expr, item_history=item)
+                if can_simplify:
+                    new_q.append(can_simplify)
+                else:
+                    check_proof(item, unique_proofs, q, done=False)
                 continue
 
             # generate B new thoughts per node
@@ -337,62 +341,40 @@ if __name__ == '__main__':
 ---------------------------proof_engine outputs------------------------------------------
 # TODO: How should we test these? --> assert unique_proofs != []?
 
-
-
-
-expr = "(a or (a and b)) -> a" # TAUTOLOGY, FOUND PROOF
-----------FINAL PROOF----------
+CK's EXAMPLES:
+------1---------
 Proof:
-(a or (a and b)) -> a
-≡ (not (a or a and b) or a)           Implication Law
-≡ (a or not (a or a and b))           Commutative Law OR
-≡ (a or not a)                        Absorption Law 1
-≡ a                                   Negation Law OR
-
-
-
-
-expr = "(not b and (a -> b)) -> not a" # TAUTOLOGY, FOUND PROOF w/ command 'python3 guide/proof_engine.py --early_stop --verbose --T=25 --del_choice --expr="(not b and (a -> b)) -> not a"'
-----------FINAL PROOF----------
-Proof:
-(not b and (a -> b)) -> not a
-≡ (not (not b and (not a or b)) or not a) Implication Law
-≡ (not a or not (not b and (b or not a))) Commutative Law OR
-≡ (not a or not ((b or not a) and not b)) Commutative Law AND
-≡ (not a or (not (b or not a) or not not b)) DeMorgan Law 2
-≡ (not a or (not (b or not a) or b))  Simplification Law (Double Negation)
-≡ ((not (b or not a) or b) or not a)  Commutative Law OR
-≡ (not (b or not a) or (b or not a))  Associative Law OR
-≡ (b or not a)                        Negation Law OR
-
-
-
-
-expr = "not((a or (a and b)) -> a)" # NOT TAUTOLOGY
-----------FINAL PROOF----------
+(((not b) and (not a)) -> (not a))
+≡ (not (not b and not a) or not a)  Implication Law
+≡ ((not not b or not not a) or not a) DeMorgan Law 2
+≡ ((b or not not a) or not a)     Simplification Law (Double Negation)
+≡ ((b or a) or not a)         Simplification Law (Double Negation)
+≡ (b or (a or not a))         Associative Law OR
+≡ (b or 1)              Negation Law OR
+≡ (1)                 Simplification Law
+------2---------
 Proof:
 not((a or (a and b)) -> a)
-≡ (not (not (a or a and b) or a))     Implication Law
-≡ (not not (a or a and b) and not a)  DeMorgan Law 1
-≡ ((a or a and b) and not a)          Simplification Law (Double Negation)
-≡ ((a and b or a) and not a)          Commutative Law OR
-≡ (a and not a)                       Absorption Law 1
-≡ (0)                                 Negation Law AND
-
-
-
-
+≡ (not (not (a or a and b) or a))   Implication Law
+≡ (not (a or not (a or a and b)))   Commutative Law OR
+≡ (not (a or not a))         Absorption Law 1
+≡ (not 1)               Negation Law OR
+≡ (0)                 Simplification Law
+-----3----------
+Proof:
+(a or (a and b)) -> a
+≡ (not (a or a and b) or a)      Implication Law
+≡ (not a or a)            Absorption Law 1
+≡ (1)                 Negation Law OR
+-----4----------
 expr = "(((y and x) or x) and y)" # NOT TAUTOLOGY
-----------FINAL PROOF----------
 Proof:
 (((y and x) or x) and y)
 ≡ (y and (x and y or x))              Commutative Law AND
-≡ (y and (x or x and y))              Commutative Law OR
-≡ (y and x)                           Absorption Law 1
+≡ ((x and y or x) and y)              Commutative Law AND
+≡ (x and y)                           Absorption Law 1
 
-
----------------------------------------------------------------------
-
+------------------------pure llm results---------------------------------------------
 
 Pure llm (no symbolic) results:
 python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
