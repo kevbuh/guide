@@ -5,7 +5,7 @@ from functools import partial
 
 from llm import llm_api_call
 from symbolic import symbolic_deduce, simplify, apply_bi_imp, is_reduced
-from prompts import propose_prompt, propose_prompt_short, value_prompt, deduction_prompt
+from prompts import propose_prompt, propose_prompt_long, value_prompt, deduction_prompt
 
 def create_propose_prompt(expr, expr_deductions):
     """output law and expression in a numbered list and create prompt"""
@@ -21,7 +21,7 @@ def create_propose_prompt(expr, expr_deductions):
             counter += 1
 
     choices = "".join(choices_list)
-    llm_message = f"{expr=}\n{choices=}{propose_prompt_short}"
+    llm_message = f"{expr=}\n{choices=}{propose_prompt}"
 
     # TODO: experiment with other prompts
     # llm_message = propose_prompt.format(expr=expr, choices=choices)
@@ -108,49 +108,6 @@ def get_formatted_proof(proof_history, law_history, num=0):
     print(formatted_proof)
     return formatted_proof
 
-# ---------------solvers---------------
-
-def solve_cot(og_expr, max_num_steps=3, verbose=True, debug=False):
-    # naive chain of thought (CoT) proof solver
-    expr = og_expr
-    proof_history=[og_expr]
-    law_history = []
-    for i in range(max_num_steps):
-        if verbose:
-            print(f"\n----------PROOF STEP #{i+1}----------\n")
-            print(f"CURRENT EXPR: {expr}")
-
-        # if expr.replace("(","").replace(")","") in TERMINAL_VALUES: # to determine if tautology or not
-        if is_reduced(expr=expr.replace("(","").replace(")","")):
-            print(f"Expression '{expr}' cannot be further applied onto laws\n")
-            break
-        
-        expr_deductions = symbolic_deduce(expr, verbose=False) 
-        llm_message, choice_dict = create_propose_prompt(expr, expr_deductions) # output law and expression in a numbered list and create prompt
-        llm_res = llm(message=llm_message) # send message to llm and collect its text response
-
-        if verbose:
-            print("\nPrompt:")
-            print("'''" + llm_message + "'''")
-            print("\nLLM Response:")
-            print("'''" + llm_res + "'''")
-
-        # search for LLM choice selection and send choice back to symbolic engine
-        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message)
-
-        if debug:
-            print(f"{choice_dict=}")
-            print(f"{choice_number=}")
-            print(f"{choice_dict[choice_number]=}")
-            print(f"{new_expr=}")
-
-        expr = new_expr
-        proof_history.append(new_expr) 
-        law_history.append(new_law)
-
-    formatted_proof = get_formatted_proof(proof_history, law_history)
-    return proof_history, formatted_proof
-
 def check_proof(item, unique_proofs, q, done=False):
     """ check if proof is done """
     a, b, c = item
@@ -186,8 +143,9 @@ def llm_symbolic_deduce(expr_i, verbose=False, num_retries=3):
             attempt += 1
     raise Exception("All attempts failed to parse JSON in llm_symbolic_deduce()")
 
+# ---------------solver---------------
 
-def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True): 
+def proof_engine(expr, K, T, B): 
     """
     psuedo code params from paper:
 
@@ -195,8 +153,10 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
     T    = step limit (tree depth)
     B    = breadth limit (generates B candidates for the next thought step)
     K    = size limit of level (for level-wise pruning)
+
+    If you're using Chain of Thought (--cot): B=1 and K=1
     """
-    # stores finished proofs in (expr, expr_history, law_history) format 
+    # to store finished proofs in (expr, expr_history, law_history) format 
     unique_proofs = [] 
 
     # preprocess expression
@@ -286,12 +246,6 @@ def solve_tot(expr, K=5, T=5, B=5, bfs=True, verbose=True):
 
     return q, formatted_proof
 
-def proof_engine(expr, max_num_steps=3, verbose=True, debug=False, naive=False):
-    if naive:
-        solve_cot(expr, max_num_steps, verbose, debug)
-    else: 
-        return solve_tot(expr, T=T, B=B, K=K, verbose=verbose) 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Prompt engine CLI args")
     parser.add_argument("--expr", type=str, default="(x and x) or (x and x)", help="The expression to evaluate")
@@ -309,7 +263,7 @@ if __name__ == '__main__':
     parser.add_argument("--ckpt", action='store_true', help="Resume from last q in guide/ckpt.txt")
     args = parser.parse_args()
     
-    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file
+    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose
     T = args.T
     B = args.B
     K = args.K
@@ -318,7 +272,12 @@ if __name__ == '__main__':
     del_choice = args.del_choice
     ckpt = args.ckpt
     ckpt_file = "guide/ckpt.txt"
+    verbose = args.verbose 
 
+    if args.cot:
+        B = 1
+        K = 1
+    
     if args.claude: model_name = "claude-3-haiku"
     else: model_name = "gpt-3.5-turbo"
     llm = partial(llm_api_call, model=model_name)
@@ -333,9 +292,8 @@ if __name__ == '__main__':
     if args.cot: print("METHOD: chain of thoughts")
     else: print("METHOD: tree of thoughts")
     print("----------------------------")
-
-    proof_engine(args.expr, max_num_steps=args.num_steps, verbose=args.verbose, debug=args.debug, naive=args.cot)
-
+    
+    proof_engine(expr=args.expr, T=T, B=B, K=K)
 
 """
 ---------------------------proof_engine outputs------------------------------------------
