@@ -118,7 +118,7 @@ def simplify(expr, item_history=None, verbose=False):
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law (Double Negation)", modified_code[:-1]))
 
-    if verbose and law_code_tuples != []: print(f"SIMPLIFICATION OUTPUT {expr=}: {law_code_tuples}")
+    if verbose and law_code_tuples != []: print(f"[SIMPLIFICATION OUTPUT] {expr=}: {law_code_tuples}")
 
     # update with new expr and law
     if law_code_tuples != []:
@@ -206,8 +206,8 @@ def symbolic_deduce(expr, verbose=False):
 
     new_expressions = defaultdict(list)
 
-    if verbose: print("SYMBOLIC ENGINE input :", expr)
-    if verbose: print("SYMBOLIC ENGINE detail:")
+    if verbose: print("[SYMBOLIC ENGINE input] :", expr)
+    if verbose: print("[SYMBOLIC ENGINE detail]:")
 
     # Associative Law
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -401,7 +401,7 @@ def symbolic_deduce(expr, verbose=False):
                 new_expressions["Commutative Law AND"].append(modified_code[:-1])
                 if verbose: print(f" - Applying Commutative Law AND: {expr} = {modified_code[:-1]}")
 
-    if verbose: print("SYMBOLIC ENGINE OUTPUT:", new_expressions)
+    if verbose: print("[SYMBOLIC ENGINE OUTPUT]:", new_expressions)
     return new_expressions
 
 if __name__ == '__main__':

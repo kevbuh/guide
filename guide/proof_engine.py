@@ -157,7 +157,7 @@ def proof_engine(expr, K, T, B):
     If you're using Chain of Thought (--cot): B=1 and K=1
     """
     # to store finished proofs in (expr, expr_history, law_history) format 
-    unique_proofs = [] 
+    unique_proofs = []
 
     # preprocess expression
     expr = expr.strip()
@@ -183,7 +183,7 @@ def proof_engine(expr, K, T, B):
             q = [(expr, [expr], [])]                   # BFS queue [(expr, expr_history, law_history)]
 
     for t in range(T): # step limit (tree depth)
-        print(f"\nTREE DEPTH:{t+1}/{T}")
+        print(f"-------------------------------\n[TREE DEPTH]: {t+1}/{T}")
         new_q = [] # stores nodes for next level
 
         for item in q: # go through each node on this level
@@ -219,7 +219,7 @@ def proof_engine(expr, K, T, B):
                     # simplify if possible                    
                     item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
 
-                    if verbose: print(f"NEW NODE [level:{t+1} ({i+1}/{B})]: new_expr={item[0]}, {new_law=}, {expr_history=}, {law_history=}")
+                    if verbose: print(f"[NEW NODE (T={t+1},B=({i+1}/{B})]: new_expr={item[0]}, {new_law=}, {expr_history=}, {law_history=}")
 
                     res = check_proof(item, unique_proofs, q)
 
