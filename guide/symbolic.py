@@ -145,15 +145,9 @@ def apply_bi_imp(expr, verbose=False):
 
     simplified_expr = astor.to_source(parsed_code)[:-1]
     if simplified_expr != expr:
-        if "<->" in expr and "->" in expr:
-            if verbose: print("SIMPLIFY: implication/biconditional law applied")
-            return ("Implication/Biconditional Law", simplified_expr)
-        elif "<->" in expr:
+        if "<->" in expr:
             if verbose: print("SIMPLIFY: biconditional law applied")
             return ("Biconditional Law", simplified_expr)
-        elif "->" in expr:
-            if verbose: print("SIMPLIFY: implication law applied")
-            return ("Implication Law", simplified_expr)
     return (None, None)
 
 def is_reduced(expr):

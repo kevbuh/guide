@@ -24,7 +24,7 @@ def create_propose_prompt(expr, expr_deductions):
     llm_message = f"{expr=}\n{choices=}{propose_prompt}"
 
     # TODO: experiment with other prompts
-    # llm_message = propose_prompt.format(expr=expr, choices=choices)
+    # llm_message = propose_prompt_long.format(expr=expr, choices=choices)
     # print("LLM_MESSAGE",llm_message)
 
     return llm_message, choice_dict
@@ -104,6 +104,10 @@ def get_formatted_proof(proof_history, law_history, num=0):
     proof_steps.append(proof_history[0]) # add last step (e.g. simply just 'x')
     for i, (proof, law) in enumerate(zip(proof_history[1:], law_history)):
         proof_steps.append(f"{proof:35} {law}")
+    if proof_history[-1] == "(1)":
+        proof_steps.append(f"TAUTOLOGY")
+    else:
+        proof_steps.append(f"NOT TAUTOLOGY")
     formatted_proof = "Proof:\n" + "\n≡ ".join(proof_steps)
     print(formatted_proof)
     return formatted_proof
@@ -194,7 +198,13 @@ def proof_engine(expr, K, T, B):
             else: expr_deductions = symbolic_deduce(expr_i, verbose) # normal symbolic engine
             
             if not expr_deductions:
-                can_simplify = simplify(expr=expr, item_history=item)
+                can_simplify = simplify(expr=expr_i, item_history=item)
+
+                if can_simplify and is_reduced(can_simplify[0]):
+                    res = check_proof(can_simplify, unique_proofs, q, done=False)
+                    if early_stop and res != (None, None):
+                        return res
+
                 if can_simplify:
                     new_q.append(can_simplify)
                 else:
@@ -331,6 +341,50 @@ Proof:
 ≡ (y and (x and y or x))              Commutative Law AND
 ≡ ((x and y or x) and y)              Commutative Law AND
 ≡ (x and y)                           Absorption Law 1
+-----5----------
+Proof:
+not ((c or 1) -> (a and not ((b or (not b)) and (a and (a or b)))))
+≡ (not (not (c or 1) or a and not ((b or not b) and (a and (a or b))))) Implication Law
+≡ (not (a and (not (b or not b) or not (a and (a or b))) or not (c or 1))) Commutative Law OR
+≡ (not (a and (not (b or not b) or not (a and (a or b))) or not 1)) Simplification Law
+≡ (not (a and (not (b or not b) or not a) or not 1)) Absorption Law 2
+≡ (not (a and (not (b or not b) or not a) or 0)) Simplification Law
+≡ (not (a and (not 1 or not a) or 0)) Negation Law OR
+≡ (not (a and (not 1 or not a)))      Simplification Law
+≡ (not (a and (0 or not a)))          Simplification Law
+≡ (not (not a or 0) or not a)         Commutative Law OR
+≡ (not (not a) or not a)              Simplification Law
+≡ (1)                                 Negation Law OR
+-----6----------
+Proof:
+not not ((b or not b) and (a and (a or b)))
+≡ (not not (1 and (a and (a or b))))  Negation Law OR
+≡ (1 and (a and (a or b)))            Simplification Law (Double Negation)
+≡ (a and (a or b))                    Simplification Law
+≡ a                                   Absorption Law 2
+-----7----------
+Proof:
+(c or (b or not b)) or ((not (c and (c or b)) > (c or 1)) and (a and not a))
+≡ ((c or (b or not b)) or not (c and (c or b)) > (c or 1) and 0) Negation Law AND
+≡ ((c or (b or not b)) or 0)          Simplification Law
+≡ ((c or (b or not b)) or 0)          Simplification Law
+≡ ((c or 1) or 0)                     Negation Law OR
+≡ (c or 1)                            Simplification Law
+≡ (1)                                 Simplification Law
+-----8----------
+(((d and (d and ( d or a))) or (not c or c)) > (c and not c )) > (b and not b)
+≡ (((d and d or (not c or c)) > (c and not c)) > (b and not b)) Absorption Law 2
+≡ (((d or (not c or c)) > (c and not c)) > (b and not b)) Idempotent Law AND
+≡ ((((c or not c) or d) > (c and not c)) > (b and not b)) Commutative Law OR
+≡ (((1 or d) > (c and not c)) > (b and not b)) Negation Law OR
+≡ ((1 > (c and not c)) > (b and not b)) Simplification Law
+≡ (not (not 1 or c and not c) or b and not b) Implication Law
+≡ (not (0 or c and not c) or b and not b) Simplification Law
+≡ (b and not b or not (0 or c and not c)) Commutative Law OR
+≡ (b and not b or not (c and not c))  Simplification Law
+≡ (0 or not 0)                        Negation Law AND
+≡ (not 0)                             Simplification Law
+≡ (1)                                 Simplification Law
 
 ------------------------pure llm results---------------------------------------------
 
