@@ -34,7 +34,7 @@ import astor
 from copy import deepcopy
 from collections import defaultdict
 from utils import booleanTree, helpers
-from ast import BoolOp, Or, And, UnaryOp, Not, Name, Constant, walk, NodeTransformer, Gt, RShift, Compare
+from ast import BoolOp, Or, And, UnaryOp, Not, Name, Constant, walk, NodeTransformer, Gt, Compare
 
 class ReplaceVisitor(NodeTransformer):
     def __init__(self, original_node, replacement_node):
@@ -175,10 +175,7 @@ def is_reduced(expr):
     can_simplify = simplify(expr=expr, item_history=("", [], []))
     has_unique_vars = sorted(list(set(vartree))) == sorted(vartree)
 
-    # print("************", can_simplify, f"{vartree=}")
-
-    if can_simplify: 
-        print("returning false")
+    if can_simplify:
         return False
     
     # TODO: is this the right check?
