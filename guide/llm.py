@@ -2,6 +2,9 @@ import os
 import time
 from dotenv import load_dotenv
 
+# TODO: top p - [0.1 0.25 0.5]
+# TODO: temperature tests - [0, 0.25 0.5 0.75]
+
 def llm_api_call(message, system="", model="gpt-3.5-turbo"):
     """
     llm api call
@@ -37,9 +40,16 @@ def llm_api_call(message, system="", model="gpt-3.5-turbo"):
         else: 
             print("ERR: OPENAI_API_KEY is not set")
             exit(0)
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": system},{"role": "user", "content": message}])
-        res = completion.choices[0].message.content
-        return res
+        
+        for i in range(20): # to get around rate limit
+            try: 
+                completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": system},{"role": "user", "content": message}])
+                res = completion.choices[0].message.content
+                return res
+            except:
+                print(f"Sleeping for {(5*i) + 2 // 2} seconds...")
+                time.sleep((5 * i) + 2 // 2)
+
     else:
         print("ERROR: Unsupported model. Pick 'gpt-3.5-turbo' or 'claude-3-haiku'")
         exit(0)
