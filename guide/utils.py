@@ -42,12 +42,6 @@ class booleanTree:
                     p, q = p.strip(), q.strip()
                     partial_step = "(" + p + " and " + q + ") or (not(" + p + ") and not(" + q + "))"
                     self.tree = self.tree.replace(items, partial_step)
-                case str(x) if "->" in x:
-                    success = 1
-                    p, q = items[1:-1].split('->', 1)
-                    p, q = p.strip(), q.strip()
-                    partial_step = "(not(" + p + ") or " + q + ")"
-                    self.tree = self.tree.replace(items, partial_step)
                 case _:
                     pass
         
@@ -58,10 +52,6 @@ class booleanTree:
                 p, q = self.tree.split('<->', 1)
                 p, q = p.strip(), q.strip()
                 self.tree = "(" + p + " and " + q + ") or (not(" + p + ") and not(" + q + "))"
-            elif "->" in str(self.tree):
-                p, q = self.tree.split('->', 1)
-                p, q = p.strip(), q.strip()
-                self.tree = "not(" + p + ") or " + q
             self.astTree = self.tree
 
     def parse_tree(self, astTree=None) -> ast:
