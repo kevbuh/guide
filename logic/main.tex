@@ -1,0 +1,81 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, multicol, wrapfig}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{graphicx, enumerate, listings}
+\usepackage{hyperref, cleveref}
+\usepackage{natbib, enumerate, amsfonts}
+\usepackage{listings, fancyhdr}
+\usepackage{rotating, multirow, geometry}
+\usepackage[shortlabels]{enumitem}
+\usepackage{hyperref, float}
+\usepackage{algorithmicx, algorithm2e}
+\usepackage{amsthm}
+
+\hypersetup{pdfauthor = Chandra Kanth Nagesh,
+            pdftitle = SRI Problem Statement,
+            pdfsubject = SRI Problem Statement,
+            pdfkeywords = {Solutions, DL},
+            pdfproducer = TeX version,
+            pdfcreator = LaTeX editor}
+
+\title{\vspace{-0.6in}Tautologies\vspace{-1.8em}}
+% \author{\normalsize{\href{mailto:ckn@colorado.edu}{Chandra Kanth Nagesh} -- March 7 2024}}
+\date{}
+\begin{document}
+
+\maketitle
+
+\vspace{-0.3in}
+\noindent
+\rule{\linewidth}{0.4pt}
+
+\begin{enumerate}[wide, labelindent=0pt]
+    \item Expression 1 \begin{align*}
+        \equiv&~ \neg ((c \vee 1) \implies (a \wedge \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b))))) \\
+        \equiv&~ (c \vee 1) \wedge \neg (a \wedge \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b))))) \\
+        \equiv&~ 1 \wedge \neg (a \wedge \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b))))) \\
+        \equiv&~ \neg (a \wedge \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b)))) \\
+        \equiv&~ \neg a \vee \neg \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ \neg a \vee ((b \vee \neg b) \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ \neg a \vee (1 \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ \neg a \vee (a \wedge (a \vee b)) \\
+        \equiv&~ \neg a \vee a \\
+        \equiv&~ 1 \\
+    \end{align*}
+    \item Expression 2 \begin{align*}
+        \equiv&~ (((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \implies (c \wedge \neg c)) \implies (b \wedge \neg b) \\
+        \equiv&~ (\neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \vee (c \wedge \neg c)) \implies (b \wedge \neg b) \\
+        \equiv&~ (\neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \vee 0) \implies (b \wedge \neg b) \\
+        \equiv&~ \neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \implies (b \wedge \neg b) \\
+        \equiv&~ \neg \neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \vee (b \wedge \neg b) \\
+        \equiv&~ (b \wedge \neg b) \vee \neg \neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \\
+        \equiv&~ 0 \vee \neg \neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \\
+        \equiv&~ \neg \neg ((d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c)) \\
+        \equiv&~ (d \wedge (d \wedge (d \vee a))) \vee (\neg c \vee c) \\
+        \equiv&~ (d \wedge d) \vee (\neg c \vee c) \\
+        \equiv&~ d \vee (\neg c \vee c) \\
+        \equiv&~ d \vee 1 \\
+        \equiv&~ 1 \\
+    \end{align*}
+    \item Expression 3 \begin{align*}
+        \equiv&~ \neg \neg ((b \vee \neg b) \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ ((b \vee \neg b) \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ (1 \wedge (a \wedge (a \vee b))) \\
+        \equiv&~ (a \wedge (a \vee b)) \\
+        \equiv&~ a \\
+    \end{align*}
+    \item Expression 4 \begin{align*}
+        \equiv&~ (c \vee (b \vee \neg b)) \vee ((\neg (c \wedge (c \vee b)) \implies (c \vee 1)) \wedge (a \wedge \neg a)) \\
+        \equiv&~ (c \vee (b \vee \neg b)) \vee ((\neg \neg (c \wedge (c \vee b)) \vee (c \vee 1)) \wedge (a \wedge \neg a)) \\
+        \equiv&~ (c \vee (b \vee \neg b)) \vee ((\neg \neg (c \wedge (c \vee b)) \vee 1) \wedge (a \wedge \neg a)) \\
+        \equiv&~ (c \vee (b \vee \neg b)) \vee (\neg \neg (c \wedge (c \vee b)) \wedge (a \wedge \neg a)) \\
+        \equiv&~ (c \vee 1) \vee (\neg \neg (c \wedge (c \vee b)) \wedge (a \wedge \neg a)) \\
+        \equiv&~ (c \vee 1) \vee (\neg \neg (c \wedge (c \vee b)) \wedge 0) \\
+        \equiv&~ (c \vee 1) \vee (\neg \neg c \wedge 0) \\
+        \equiv&~ (c \vee 1) \vee (c \wedge 0) \\
+        \equiv&~ 1 \vee 0 \\
+        \equiv&~ 1 \\
+    \end{align*}
+\end{enumerate}
+
+\end{document}
