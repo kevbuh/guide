@@ -44,14 +44,24 @@ pip install -r requirements.txt
     - [x] simplify() (Simplification engine)
     - [x] is_reduced()
     - [ ] proof_engine()
-- [ ] Set up experiment suite to track model performance
-- [ ] Start experimenting with how to improve ToT
+- [ ] Experiments
     - [x] remove already chosen options
     - [x] save state into file so you can resume process later
+    - [ ] Set up experiment suite to track model performance
     - [ ] look at entire tree
     - [ ] test with other prompts
     - [ ] choose law with respect to the probabilities
     - [ ] prune based off of >75 score
+    - [ ] How variable are the results in terms of temp
+    - [ ] How LLM performance scales with number of variables or length of expression
+    - [ ] Compare LLM performance vs
+        - [ ] Random choice
+        - [ ] Greedy
+        - [ ] simulated annealing ( prob inverse of complexity)
+        - [ ] other heuristics
+    - [ ] Find patterns of shortest vs longest proofs
+    - [ ] Try different prompts with complexity measure like number of variables, depth, etc
+    - [ ] We can generate new problems by negating known unsatisfiable expressions
 
 ## Usage
 
