@@ -61,7 +61,11 @@ pip install -r requirements.txt
         - [ ] other heuristics
     - [ ] Find patterns of shortest vs longest proofs
     - [ ] Try different prompts with complexity measure like number of variables, depth, etc
-    - [ ] We can generate new problems by negating known unsatisfiable expressions
+    - [ ] Generate new problems by negating known unsatisfiable expressions
+    - [ ] top-p 
+        - [0.1, 0.25, 0.5]
+    - [ ] temperature tests 
+        - [0, 0.25, 0.5, 0.75]
 
 ## Usage
 

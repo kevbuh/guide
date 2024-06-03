@@ -2,9 +2,6 @@ import os
 import time
 from dotenv import load_dotenv
 
-# TODO: top p - [0.1 0.25 0.5]
-# TODO: temperature tests - [0, 0.25 0.5 0.75]
-
 def llm_api_call(message, system="", model="gpt-3.5-turbo"):
     """
     llm api call

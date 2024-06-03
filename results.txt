@@ -1,0 +1,85 @@
+---------------------------proof_engine outputs------------------------------------------
+CK's EXAMPLES:
+------1---------
+Proof:
+(((not b) and (not a)) -> (not a))
+≡ (not (not b and not a) or not a)  Implication Law
+≡ ((not not b or not not a) or not a) DeMorgan Law 2
+≡ ((b or not not a) or not a)     Simplification Law (Double Negation)
+≡ ((b or a) or not a)         Simplification Law (Double Negation)
+≡ (b or (a or not a))         Associative Law OR
+≡ (b or 1)              Negation Law OR
+≡ (1)                 Simplification Law
+------2---------
+Proof:
+not((a or (a and b)) -> a)
+≡ (not (not (a or a and b) or a))   Implication Law
+≡ (not (a or not (a or a and b)))   Commutative Law OR
+≡ (not (a or not a))         Absorption Law 1
+≡ (not 1)               Negation Law OR
+≡ (0)                 Simplification Law
+-----3----------
+Proof:
+(a or (a and b)) -> a
+≡ (not (a or a and b) or a)      Implication Law
+≡ (not a or a)            Absorption Law 1
+≡ (1)                 Negation Law OR
+-----4----------
+expr = "(((y and x) or x) and y)" # NOT TAUTOLOGY
+Proof:
+(((y and x) or x) and y)
+≡ (y and (x and y or x))              Commutative Law AND
+≡ ((x and y or x) and y)              Commutative Law AND
+≡ (x and y)                           Absorption Law 1
+-----5----------
+Proof:
+not ((c or 1) -> (a and not ((b or (not b)) and (a and (a or b)))))
+≡ (not (not (c or 1) or a and not ((b or not b) and (a and (a or b))))) Implication Law
+≡ (not (a and (not (b or not b) or not (a and (a or b))) or not (c or 1))) Commutative Law OR
+≡ (not (a and (not (b or not b) or not (a and (a or b))) or not 1)) Simplification Law
+≡ (not (a and (not (b or not b) or not a) or not 1)) Absorption Law 2
+≡ (not (a and (not (b or not b) or not a) or 0)) Simplification Law
+≡ (not (a and (not 1 or not a) or 0)) Negation Law OR
+≡ (not (a and (not 1 or not a)))      Simplification Law
+≡ (not (a and (0 or not a)))          Simplification Law
+≡ (not (not a or 0) or not a)         Commutative Law OR
+≡ (not (not a) or not a)              Simplification Law
+≡ (1)                                 Negation Law OR
+-----6----------
+Proof:
+not not ((b or not b) and (a and (a or b)))
+≡ (not not (1 and (a and (a or b))))  Negation Law OR
+≡ (1 and (a and (a or b)))            Simplification Law (Double Negation)
+≡ (a and (a or b))                    Simplification Law
+≡ a                                   Absorption Law 2
+-----7----------
+Proof:
+(c or (b or not b)) or ((not (c and (c or b)) > (c or 1)) and (a and not a))
+≡ ((c or (b or not b)) or not (c and (c or b)) > (c or 1) and 0) Negation Law AND
+≡ ((c or (b or not b)) or 0)          Simplification Law
+≡ ((c or (b or not b)) or 0)          Simplification Law
+≡ ((c or 1) or 0)                     Negation Law OR
+≡ (c or 1)                            Simplification Law
+≡ (1)                                 Simplification Law
+-----8----------
+(((d and (d and ( d or a))) or (not c or c)) > (c and not c )) > (b and not b)
+≡ (((d and d or (not c or c)) > (c and not c)) > (b and not b)) Absorption Law 2
+≡ (((d or (not c or c)) > (c and not c)) > (b and not b)) Idempotent Law AND
+≡ ((((c or not c) or d) > (c and not c)) > (b and not b)) Commutative Law OR
+≡ (((1 or d) > (c and not c)) > (b and not b)) Negation Law OR
+≡ ((1 > (c and not c)) > (b and not b)) Simplification Law
+≡ (not (not 1 or c and not c) or b and not b) Implication Law
+≡ (not (0 or c and not c) or b and not b) Simplification Law
+≡ (b and not b or not (0 or c and not c)) Commutative Law OR
+≡ (b and not b or not (c and not c))  Simplification Law
+≡ (0 or not 0)                        Negation Law AND
+≡ (not 0)                             Simplification Law
+≡ (1)                                 Simplification Law
+------------------------pure llm results---------------------------------------------
+Pure llm (no symbolic) results:
+python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
+Proof:
+(a or (a and b)) -> a                 Absorption
+≡ (a or (a and b)) -> a               Simplification
+≡ a -> a                              Identity
+≡ a
