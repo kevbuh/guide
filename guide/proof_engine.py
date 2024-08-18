@@ -289,7 +289,7 @@ if __name__ == '__main__':
         K = 1
     
     if args.claude: model_name = "claude-3-haiku"
-    else: model_name = "gpt-3.5-turbo"
+    else: model_name = "gpt-4o-mini"
     llm = partial(llm_api_call, model=model_name)
 
     print(f"\nSOLVING: '{args.expr}'")

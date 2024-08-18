@@ -2,7 +2,7 @@ import os
 import time
 from dotenv import load_dotenv
 
-def llm_api_call(message, system="", model="gpt-3.5-turbo"):
+def llm_api_call(message, system="", model="gpt-4o-mini"):
     """
     llm api call
     make set up your API keys in a .env file
@@ -29,7 +29,7 @@ def llm_api_call(message, system="", model="gpt-3.5-turbo"):
             except:
                 print("Sleeping for 10 seconds...")
                 time.sleep(10)
-    elif model == "gpt-3.5-turbo": 
+    elif model in ["gpt-3.5-turbo", "gpt-4o-mini"]: 
         import openai
         load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
@@ -40,7 +40,7 @@ def llm_api_call(message, system="", model="gpt-3.5-turbo"):
         
         for i in range(20): # to get around rate limit
             try: 
-                completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": system},{"role": "user", "content": message}])
+                completion = openai.ChatCompletion.create(model=model, messages=[{"role": "system", "content": system},{"role": "user", "content": message}])
                 res = completion.choices[0].message.content
                 return res
             except:
@@ -48,7 +48,7 @@ def llm_api_call(message, system="", model="gpt-3.5-turbo"):
                 time.sleep((5 * i) + 2 // 2)
 
     else:
-        print("ERROR: Unsupported model. Pick 'gpt-3.5-turbo' or 'claude-3-haiku'")
+        print("ERROR: Unsupported model. Pick 'gpt-4o-mini', 'gpt-3.5-turbo' or 'claude-3-haiku'")
         exit(0)
 
 if __name__ == '__main__':
