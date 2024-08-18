@@ -263,7 +263,7 @@ if __name__ == '__main__':
     parser.add_argument("--debug", action='store_true', help="Print debug statements")
     parser.add_argument("--verbose", action='store_true', help="Print out states at each step")
     parser.add_argument("--cot", action='store_true', help="Use Chain of Thought")
-    parser.add_argument("--claude", action='store_true', help="Use Claude-3-Haiku")
+    parser.add_argument("--model", type=str, default="gpt-4o-mini", help="Specify a model to use")
     parser.add_argument("--T",  type=int, default=5, help="ToT tree depth")
     parser.add_argument("--B",  type=int, default=3, help="ToT branching factor")
     parser.add_argument("--K",  type=int, default=5, help="ToT max number of nodes per level")
@@ -283,17 +283,16 @@ if __name__ == '__main__':
     ckpt = args.ckpt
     ckpt_file = "guide/ckpt.txt"
     verbose = args.verbose 
+    model = args.model
 
     if args.cot:
-        B = 1
+        B = 1 # single thread of thought
         K = 1
     
-    if args.claude: model_name = "claude-3-haiku"
-    else: model_name = "gpt-4o-mini"
-    llm = partial(llm_api_call, model=model_name)
+    llm = partial(llm_api_call, model=model)
 
     print(f"\nSOLVING: '{args.expr}'")
-    print(f"LLM: {model_name}")
+    print(f"LLM: {model}")
     print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}, {del_choice=}, {ckpt=}")
     if pure_llm: 
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
