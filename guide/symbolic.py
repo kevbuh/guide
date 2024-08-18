@@ -195,10 +195,9 @@ def symbolic_deduce(expr, verbose=False):
     - Distributive Law 2: (x and y) or (x and y) = ((y and x or y) and (y and x or x))
     output : defaultdict(<class 'list'>, {'Commutative Law': ['(x and y or x and y)', '(y and x or x and y)', '(y and x or y and x)'], 'Distributive Law': ['((y and x or y) and (y and x or x))']})
     """
-
-    # ----------CREATE AST-----------
     if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
 
+    # ----------CREATE AST-----------
     bTree = booleanTree(expr)
     t_util = helpers()
     bTree.parse_tree()
