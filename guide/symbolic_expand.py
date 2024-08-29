@@ -37,6 +37,7 @@ def symbolic_expand(expr="1", iterations=5, verbose=False):
             "absorption_law_and",
             "absorption_law_or",
             "double_negation",
+            "negation_law"
         ])
 
         new_expr = apply_expansion_law(current_expr, expansion_law)
@@ -73,6 +74,7 @@ def apply_expansion_law(expr, law):
     elif law == "absorption_law_and": return absorption_law_and(tree)
     elif law == "absorption_law_or": return absorption_law_or(tree)
     elif law == "double_negation": return double_negation(tree)
+    elif law == "negation_law": return negation_law(tree)
     else: return expr
 
 def commutative_law_and(tree):
@@ -284,5 +286,5 @@ def absorption_law_or(tree):
     return unparse(tree)
 
 if __name__ == "__main__":
-    expanded_expr = symbolic_expand("1", iterations=5, verbose=True)
+    expanded_expr = symbolic_expand("1 or 1", iterations=5, verbose=True)
     print(f"\nFinal expanded expression: {expanded_expr}")

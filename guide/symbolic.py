@@ -383,7 +383,7 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), b])
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["Implication Law"].append(modified_code[:-1]) 
+                new_expressions["Implication Law"].append(modified_code[:-1])
                 if verbose: print(f" - Implication Law: {expr} = {modified_code[:-1]}")
 
     # check if expr is unreducable expression
