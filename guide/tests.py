@@ -9,7 +9,7 @@ class TestIsReduced(unittest.TestCase):
         self.assertTrue(is_reduced("(y)"), f"ERR: (y) failed")
         self.assertTrue(is_reduced("(x and y)"), f"ERR: (x and y) failed")
         self.assertTrue(is_reduced("(y and x)"), f"ERR: (y and x) failed")
-        self.assertTrue(is_reduced( "(y and x and z)"), f"ERR: (y and x and z) failed")
+        self.assertTrue(is_reduced("(y and x and z)"), f"ERR: (y and x and z) failed")
         self.assertTrue(is_reduced("(y or z)"), f"ERR: (y or z) failed")
         self.assertTrue(is_reduced("(y or x)"), f"ERR: (y or x) failed")
         self.assertTrue(is_reduced("(x or y)"), f"ERR: (x or y) failed")
@@ -46,19 +46,19 @@ class TestSimplificationEngine(unittest.TestCase):
         
         a = simplify(expr="(x and 1) or 0", item_history=("", [], []))
         res = ('x', ['(x and 1)', 'x'], ['Simplification Law', 'Simplification Law'])
-        self.assertEqual(a,res)
+        self.assertEqual(a, res)
 
         a = simplify(expr="not 0", item_history=("", [], []))
         res = ('(1)', ['(1)'], ['Simplification Law'])
-        self.assertEqual(a,res)
+        self.assertEqual(a, res)
 
         a = simplify(expr="not 1", item_history=("", [], []))
         res = ('(0)', ['(0)'], ['Simplification Law'])
-        self.assertEqual(a,res)
+        self.assertEqual(a, res)
 
         a = simplify(expr="not not x", item_history=("", [], []))
         res = ('x', ['x'], ['Simplification Law (Double Negation)'])
-        self.assertEqual(a,res)
+        self.assertEqual(a, res)
 
 if __name__ == '__main__':
     unittest.main()
