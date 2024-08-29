@@ -34,6 +34,8 @@ def symbolic_expand(expr="1", iterations=5, verbose=False):
             "distributive_law_or",
             "distributive_law_and",
             # "demorgan_law",
+            "absorption_law_and",
+            "absorption_law_or",
             "double_negation",
         ])
 
@@ -68,6 +70,8 @@ def apply_expansion_law(expr, law):
     elif law == "distributive_law_or": return distributive_law_or(tree)
     elif law == "distributive_law_and": return distributive_law_and(tree)
     # elif law == "demorgan_law": return demorgan_law(tree)
+    elif law == "absorption_law_and": return absorption_law_and(tree)
+    elif law == "absorption_law_or": return absorption_law_or(tree)
     elif law == "double_negation": return double_negation(tree)
     else: return expr
 
@@ -231,6 +235,50 @@ def double_negation(tree):
     new_tree = UnaryOp(
         op=Not(),
         operand=UnaryOp(op=Not(), operand=tree.body[0].value)
+    )
+    tree.body[0].value = new_tree
+    return unparse(tree)
+
+def absorption_law_and(tree):
+    """Expand using absorption law: a = a and (a or b)"""
+
+    a = tree.body[0].value
+    b = Name(id='b', ctx=Load())
+    
+    new_tree = BoolOp(
+        op=And(),
+        values=[
+            a,
+            BoolOp(
+                op=Or(),
+                values=[
+                    a,
+                    b
+                ]
+            )
+        ]
+    )
+    tree.body[0].value = new_tree
+    return unparse(tree)
+
+def absorption_law_or(tree):
+    """Expand using absorption law: a = a or (a and b)"""
+    
+    a = tree.body[0].value
+    b = Name(id='b', ctx=Load())
+    
+    new_tree = BoolOp(
+        op=Or(),
+        values=[
+            a,
+            BoolOp(
+                op=And(),
+                values=[
+                    a,
+                    b
+                ]
+            )
+        ]
     )
     tree.body[0].value = new_tree
     return unparse(tree)

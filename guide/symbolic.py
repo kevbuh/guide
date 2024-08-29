@@ -33,7 +33,7 @@ import ast
 import astor
 from copy import deepcopy
 from collections import defaultdict
-from .utils import booleanTree, helpers
+from utils import booleanTree, helpers
 from ast import BoolOp, Or, And, UnaryOp, Not, Name, Constant, walk, NodeTransformer, Gt, Compare
 
 class ReplaceVisitor(NodeTransformer):
