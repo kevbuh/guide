@@ -7,16 +7,16 @@ the condition, it manipulates the tree into the new logical condition and return
 unparsed trees.
 
 example expressions:
-# exp = "((not(x or y) and z) or True) <-> z"
+# exp = "((not(a or b) and c) or True) <-> c"
 exp = "(a -> (f -> c)) -> d"
 # exp = "((a <-> (p <-> q)) <-> c) <-> d"
 # exp = "p -> (a -> b)"
 # exp = "(p -> b) -> a"
 # exp = "(p -> b) <-> a"
 # exp = "(not(b) and (a -> b)) <-> not(a)"
-# exp = "(not(x and not(y)) or ((not(y) and z))) and z"
-# exp = "(x and y) or (x and y)"
-# exp = "((not x or not not not y) or z)"
+# exp = "(not(a and not(b)) or ((not(b) and c))) and c"
+# exp = "(a and b) or (a and b)"
+# exp = "((not a or not not not b) or c)"
 # exp = "a or b"
 # exp = "(a and b) and c"
 # exp = "a or (b and c)"
@@ -33,7 +33,7 @@ import ast
 import astor
 from copy import deepcopy
 from collections import defaultdict
-from utils import booleanTree, helpers
+from .utils import booleanTree, helpers
 from ast import BoolOp, Or, And, UnaryOp, Not, Name, Constant, walk, NodeTransformer, Gt, Compare
 
 class ReplaceVisitor(NodeTransformer):
@@ -187,13 +187,13 @@ def symbolic_deduce(expr, verbose=False):
 
     Example output:
     ...
-    input  : (x and y) or (x and y)
+    input  : (a and b) or (a and b)
     detail :
-    - Commutative Law: (x and y) or (x and y) = (x and y or x and y)
-    - Commutative Law: (x and y) or (x and y) = (y and x or x and y)
-    - Commutative Law: (x and y) or (x and y) = (y and x or y and x)
-    - Distributive Law 2: (x and y) or (x and y) = ((y and x or y) and (y and x or x))
-    output : defaultdict(<class 'list'>, {'Commutative Law': ['(x and y or x and y)', '(y and x or x and y)', '(y and x or y and x)'], 'Distributive Law': ['((y and x or y) and (y and x or x))']})
+    - Commutative Law: (a and b) or (a and b) = (a and b or a and b)
+    - Commutative Law: (a and b) or (a and b) = (b and a or a and b)
+    - Commutative Law: (a and b) or (a and b) = (b and a or b and a)
+    - Distributive Law 2: (a and b) or (a and b) = ((b and a or b) and (b and a or a))
+    output : defaultdict(<class 'list'>, {'Commutative Law': ['(a and b or a and b)', '(b and a or a and b)', '(b and a or b and a)'], 'Distributive Law': ['((b and a or b) and (b and a or a))']})
     """
     if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
 
@@ -423,6 +423,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Symbolic engine CLI args")
     parser.add_argument("--expr", type=str, help="The expression to evaluate")
     args = parser.parse_args()
-    expr = args.expr if args.expr else "(x and x) or (x and x)"
+    expr = args.expr if args.expr else "(a and a) or (a and a)"
     expr = expr.strip()
     symbolic_deduce(expr, verbose=True)

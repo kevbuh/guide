@@ -1,8 +1,7 @@
 import random
-from copy import deepcopy
 from ast import BoolOp, Load, Or, And, UnaryOp, Not, Name, Constant, UnaryOp, unparse, Load, parse
 
-def symbolic_expand(expr, iterations=5, verbose=False):
+def symbolic_expand(expr="1", iterations=5, verbose=False):
     """
     Generates a logical expression into a longer tautological expression
 
@@ -12,7 +11,7 @@ def symbolic_expand(expr, iterations=5, verbose=False):
     Example output
     ...
     input  : 1
-    output : ((1 or y) or z) and (1 or (y or z))
+    output : ((1 or a) or b) and (1 or (a or b))
     """
     if not expr.strip():
         raise ValueError("Expression cannot be empty")
@@ -28,7 +27,8 @@ def symbolic_expand(expr, iterations=5, verbose=False):
             "identity_law",
             "idempotent_law_or",
             "idempotent_law_and",
-            "commutative_law",
+            "commutative_law_and",
+            "commutative_law_or",
             "associative_law_and",
             "associative_law_or",
             "distributive_law_or",
@@ -61,7 +61,8 @@ def apply_expansion_law(expr, law):
     if law == "identity_law": return identity_law(tree)
     elif law == "idempotent_law_or": return idempotent_law_or(tree)
     elif law == "idempotent_law_and": return idempotent_law_and(tree)
-    elif law == "commutative_law": return commutative_law(tree)
+    elif law == "commutative_law_and": return commutative_law_and(tree)
+    elif law == "commutative_law_or": return commutative_law_or(tree)
     elif law == "associative_law_and": return associative_law_and(tree)
     elif law == "associative_law_or": return associative_law_or(tree)
     elif law == "distributive_law_or": return distributive_law_or(tree)
@@ -70,8 +71,8 @@ def apply_expansion_law(expr, law):
     elif law == "double_negation": return double_negation(tree)
     else: return expr
 
-def commutative_law(tree):
-    """Expand using commutative law: x and y = y and x"""
+def commutative_law_and(tree):
+    """Expand using commutative law: a and b = b and a"""
     if len(tree.body) < 2:
         return unparse(tree)
 
@@ -85,8 +86,23 @@ def commutative_law(tree):
     tree.body[0].value = new_tree
     return unparse(tree)
 
+def commutative_law_or(tree):
+    """Expand using commutative law: a or b = b or a"""
+    if len(tree.body) < 2:
+        return unparse(tree)
+
+    new_tree = BoolOp(
+        op=Or(),
+        values=[
+            tree.body[1].value, 
+            tree.body[0].value
+        ]
+    )
+    tree.body[0].value = new_tree
+    return unparse(tree)
+
 def associative_law_and(tree):
-    """Expand using associative law: (x and y) and z = x and (y and z)"""
+    """Expand using associative law: (a and b) and c = a and (b and c)"""
     if len(tree.body) < 3:
         return unparse(tree)
 
@@ -101,7 +117,7 @@ def associative_law_and(tree):
     return unparse(tree)
 
 def associative_law_or(tree):
-    """Expand using associative law for OR: (x or y) or z = x or (y or z)"""
+    """Expand using associative law for OR: (a or b) or c = a or (b or c)"""
     if len(tree.body) < 3:
         return unparse(tree)
 
@@ -116,7 +132,7 @@ def associative_law_or(tree):
     return unparse(tree)
 
 def distributive_law_and(tree):
-    """Expand using distributive law: x and (y or z) = (x and y) or (x and z)"""
+    """Expand using distributive law: a and (b or c) = (a and b) or (a and c)"""
     if len(tree.body) < 2:
         return unparse(tree)
 
@@ -131,7 +147,7 @@ def distributive_law_and(tree):
     return unparse(tree)
 
 def distributive_law_or(tree):
-    """Expand using distributive law: x or (y and z) = (x or y) and (x or z)"""
+    """Expand using distributive law: a or (b and c) = (a or b) and (a or c)"""
     if len(tree.body) < 2:
         return unparse(tree)
 
@@ -211,7 +227,7 @@ def negation_law(tree):
 #     return unparse(tree)
 
 def double_negation(tree):
-    """Expand using double negation: x = not(not x)"""
+    """Expand using double negation: a = not(not a)"""
     new_tree = UnaryOp(
         op=Not(),
         operand=UnaryOp(op=Not(), operand=tree.body[0].value)
@@ -220,6 +236,5 @@ def double_negation(tree):
     return unparse(tree)
 
 if __name__ == "__main__":
-    initial_expr = "1" # start out with simple tautology
-    expanded_expr = symbolic_expand(initial_expr, iterations=5, verbose=True)
+    expanded_expr = symbolic_expand("1", iterations=5, verbose=True)
     print(f"\nFinal expanded expression: {expanded_expr}")
