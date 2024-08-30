@@ -55,6 +55,16 @@ class ReplaceVisitor(NodeTransformer):
         if node == self.original_node:
             return self.replacement_node
         return self.generic_visit(node)
+
+    def visit_Constant(self, node):
+        if node == self.original_node:
+            return self.replacement_node
+        return self.generic_visit(node)
+    
+    def visit_Name(self, node):
+        if node == self.original_node:
+            return self.replacement_node
+        return self.generic_visit(node)
     
 def simplify(expr, item_history=None, verbose=False):
     """
@@ -117,8 +127,8 @@ def simplify(expr, item_history=None, verbose=False):
 
             # Double Negation Law 
             case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):
-                n_node = Name(id=a)
-                replaced_tree = ReplaceVisitor(node, n_node).visit(tree)
+                new_node = Name(id=a)
+                replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
                 modified_code = astor.to_source(replaced_tree)
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law (Double Negation)", modified_code[:-1]))
@@ -236,8 +246,8 @@ def symbolic_deduce(expr, verbose=False):
     for node in walk(parsed_code): 
         match node:
             case BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[b, c])]):
-                n_node = BoolOp(op=Or(), values=[BoolOp(op=And(), values=[a, b]), BoolOp(op=And(), values=[a, c])])
-                replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+                new_node = BoolOp(op=Or(), values=[BoolOp(op=And(), values=[a, b]), BoolOp(op=And(), values=[a, c])])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
                 new_expressions["Distributive Law AND"].append(modified_code[:-1])
                 if verbose: print(f" - Distributive Law AND: {expr} = {modified_code[:-1]}")
@@ -246,8 +256,8 @@ def symbolic_deduce(expr, verbose=False):
     for node in walk(parsed_code): 
         match node:
             case BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[b, c])]):
-                n_node = BoolOp(op=And(), values=[BoolOp(op=Or(), values=[a, b]), BoolOp(op=Or(), values=[a, c])])
-                replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+                new_node = BoolOp(op=And(), values=[BoolOp(op=Or(), values=[a, b]), BoolOp(op=Or(), values=[a, c])])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
                 new_expressions["Distributive Law OR"].append(modified_code[:-1])
                 if verbose: print(f" - Distributive Law OR: {expr} = {modified_code[:-1]}")
@@ -269,8 +279,8 @@ def symbolic_deduce(expr, verbose=False):
         match node:
             case BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), b]) | BoolOp(op=And(), values=[b, UnaryOp(op=Not(), operand=a)]):
                 if t_util.are_subtrees_equivalent(a, b):
-                    n_node = Constant(value=0)
-                    replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+                    new_node = Constant(value=0)
+                    replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
                     new_expressions["Negation Law AND"].append(modified_code[:-1]) 
                     if verbose: print(f" - Negation Law AND: {expr} = {modified_code[:-1]}")
@@ -281,8 +291,8 @@ def symbolic_deduce(expr, verbose=False):
         match node:
             case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=b), a]) | BoolOp(op=Or(), values=[a, UnaryOp(op=Not(), operand=b)]):
                 if t_util.are_subtrees_equivalent(a, b):
-                    n_node = Constant(value=1)
-                    replaced_tree = ReplaceVisitor(node, n_node).visit(parsed_code)
+                    new_node = Constant(value=1)
+                    replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                     modified_code = astor.to_source(replaced_tree)
                     new_expressions["Negation Law OR"].append(modified_code[:-1]) 
                     if verbose: print(f" - Negation Law OR: {expr} = {modified_code[:-1]}")
@@ -354,7 +364,7 @@ def symbolic_deduce(expr, verbose=False):
                 new_expressions["Domination Law AND"].append(modified_code[:-1])
                 if verbose: print(f" - Domination Law 2: {expr} = {modified_code[:-1]}")
 
-    # DeMorgan's Law 
+    # DeMorgan's Law
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code):
         match node:
