@@ -67,11 +67,9 @@ pip install -r requirements.txt
     - [ ] temperature tests 
         - [0, 0.25, 0.5, 0.75]
 
-## Usage
+## Proof Engine
 
-Looks like the system works for simple expressions!
-
-Command: uses GPT-3.5-Turbo and prints out process information. 
+Creates a proof using a guided tree-of-thoughts
 
 ```bash
 python3 guide/proof_engine.py
@@ -118,6 +116,7 @@ Proof:
 ≡ x
 ```
 
+
 CLI Arguments
 ```bash
 usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug]
@@ -143,7 +142,26 @@ options:
   --ckpt                Resume from last q in guide/ckpt.txt
 ```
 
-## Symbolic Logic
+## Synthetic Mirror
+
+```bash
+python3 guide/symbolic_mirror.py
+```
+```
+(1)
+(a or 1)                            Identity Law 1
+(a or (a or 1))                     Identity Law 1
+((a or a) or (a or 1))              Idempotent Law OR
+((a or a) or (a or (a or 1)))       Identity Law 1
+(((a or a and b) or a) or (a or (a or 1))) Absorption Law OR
+(((a or b and a) or a) or (a or (a or 1))) Commutative Law AND
+((((a or b and a) or a) or a) or (a or 1)) Associative Law OR
+((((a or b and a) or a) or a) or (a or (a or 1))) Identity Law 1
+((((a or b and a) or a) or a and 1) or (a or (a or 1))) Identity Law 2
+(((((a or b and a) or a) or a and 1) or a) or (a or 1)) Associative Law OR
+```
+
+## Symbolic Logic Reference
 
 ### *Notation*
 
