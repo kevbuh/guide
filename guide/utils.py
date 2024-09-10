@@ -1,7 +1,10 @@
+import re
 import ast
+import regex
 from collections import deque
 from dataclasses import dataclass
-import regex
+
+from prompts import propose_prompt, propose_prompt_long
 
 @dataclass
 class booleanTree:
@@ -125,3 +128,68 @@ class helpers:
             if node1 != node2:
                 return False
         return True
+    
+
+def create_propose_prompt(expr, expr_deductions):
+    """output law and expression in a numbered list and create prompt"""
+    choices_list = []
+    choice_dict = {} # Tracks the possible choices to choose from
+    counter = 0
+
+    for law, expressions in expr_deductions.items():
+        for expression in expressions:
+            choice = f"#{counter}. '{law}', '{expression}'\n"
+            choices_list.append(choice)
+            choice_dict[str(counter)] = (expression, law)
+            counter += 1
+
+    choices = "".join(choices_list)
+    llm_message = f"{expr=}\n{choices=}{propose_prompt}"
+
+    # TODO: experiment with other prompts
+    # llm_message = propose_prompt_long.format(expr=expr, choices=choices)
+    # print("LLM_MESSAGE",llm_message)
+
+    return llm_message, choice_dict
+
+def get_llm_choice(llm_text, choice_dict, llm_message):
+    """search for LLM choice selection and send choice back to symbolic engine"""
+    pattern = r"LLM CHOICE: #(\d+)\."
+    match = re.search(pattern, llm_text)
+    retries = 0
+    MAX_RETRIES = 3
+
+    while retries < MAX_RETRIES:
+        if match:
+            choice_number = match.group(1)
+            if choice_number in choice_dict:
+                new_expr, new_law = choice_dict[choice_number]
+                return choice_number, new_expr, new_law
+            else:
+                print(f"WARNING: Choice number {choice_number} not in choice_dict. Retrying...{choice_dict=}")
+        else:
+            print("Couldn't find LLM choice...retrying")
+        
+        llm_res = llm(message=llm_message)  # Send message to LLM and collect its text response
+        match = re.search(pattern, llm_res)
+        retries += 1
+
+    raise ValueError("ERROR: Valid choice number not found after maximum retries")
+
+def get_llm_value(llm_text, llm_message):
+    """search for LLM value and send choice back"""
+    match = re.search(r'\d+', llm_text)
+    retries = 0
+
+    MAX_RETRIES = 2
+    while not match and retries < MAX_RETRIES:
+        print("Couldn't find number...retrying")
+        llm_res = llm(message=llm_message)  # send message to llm and collect its text response
+        match = re.search(r'\d+', llm_res)
+        retries += 1
+
+    if match:
+        value = int(match.group(0))
+        return value
+    else:
+        raise ValueError("ERROR: Choice number not found after maximum retries")

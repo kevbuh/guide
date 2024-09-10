@@ -111,22 +111,19 @@ def simplify(expr, item_history=None, verbose=False):
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
 
-            # not 0 = 1
-            case UnaryOp(op=Not(), operand=Constant(value=0)):
+            case UnaryOp(op=Not(), operand=Constant(value=0)): # not 0 = 1
                 new_node = Constant(value=1)
                 replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
 
-            # not 1 = 0
-            case UnaryOp(op=Not(), operand=Constant(value=1)):
+            case UnaryOp(op=Not(), operand=Constant(value=1)): # not 1 = 0
                 new_node = Constant(value=0)
                 replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
                 modified_code = astor.to_source(replaced_tree)
                 law_code_tuples.append(("Simplification Law", modified_code[:-1])) 
 
-            # Double Negation Law 
-            case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)):
+            case UnaryOp(op=Not(), operand=UnaryOp(op=Not(), operand=a)): # not(not(a)) = a
                 new_node = Name(id=a)
                 replaced_tree = ReplaceVisitor(node, new_node).visit(tree)
                 modified_code = astor.to_source(replaced_tree)

@@ -1,75 +1,12 @@
-import re
 import json
 import argparse
 from functools import partial
+import random
 
 from llm import llm_api_call
 from symbolic import symbolic_deduce, simplify, apply_bi_imp, is_reduced
-from prompts import propose_prompt, propose_prompt_long, value_prompt, deduction_prompt
-
-def create_propose_prompt(expr, expr_deductions):
-    """output law and expression in a numbered list and create prompt"""
-    choices_list = []
-    choice_dict = {} # Tracks the possible choices to choose from
-    counter = 0
-
-    for law, expressions in expr_deductions.items():
-        for expression in expressions:
-            choice = f"#{counter}. '{law}', '{expression}'\n"
-            choices_list.append(choice)
-            choice_dict[str(counter)] = (expression, law)
-            counter += 1
-
-    choices = "".join(choices_list)
-    llm_message = f"{expr=}\n{choices=}{propose_prompt}"
-
-    # TODO: experiment with other prompts
-    # llm_message = propose_prompt_long.format(expr=expr, choices=choices)
-    # print("LLM_MESSAGE",llm_message)
-
-    return llm_message, choice_dict
-
-def get_llm_choice(llm_text, choice_dict, llm_message):
-    """search for LLM choice selection and send choice back to symbolic engine"""
-    pattern = r"LLM CHOICE: #(\d+)\."
-    match = re.search(pattern, llm_text)
-    retries = 0
-    MAX_RETRIES = 3
-
-    while retries < MAX_RETRIES:
-        if match:
-            choice_number = match.group(1)
-            if choice_number in choice_dict:
-                new_expr, new_law = choice_dict[choice_number]
-                return choice_number, new_expr, new_law
-            else:
-                print(f"WARNING: Choice number {choice_number} not in choice_dict. Retrying...{choice_dict=}")
-        else:
-            print("Couldn't find LLM choice...retrying")
-        
-        llm_res = llm(message=llm_message)  # Send message to LLM and collect its text response
-        match = re.search(pattern, llm_res)
-        retries += 1
-
-    raise ValueError("ERROR: Valid choice number not found after maximum retries")
-
-def get_llm_value(llm_text, llm_message):
-    """search for LLM value and send choice back"""
-    match = re.search(r'\d+', llm_text)
-    retries = 0
-
-    MAX_RETRIES = 2
-    while not match and retries < MAX_RETRIES:
-        print("Couldn't find number...retrying")
-        llm_res = llm(message=llm_message)  # send message to llm and collect its text response
-        match = re.search(r'\d+', llm_res)
-        retries += 1
-
-    if match:
-        value = int(match.group(0))
-        return value
-    else:
-        raise ValueError("ERROR: Choice number not found after maximum retries")
+from prompts import value_prompt, deduction_prompt
+from utils import create_propose_prompt, get_llm_choice, get_llm_value
     
 def get_value(expr, expr_history):
     prompt = value_prompt.format(expr=expr, expr_history=expr_history)
@@ -147,6 +84,32 @@ def llm_symbolic_deduce(expr_i, verbose=False, num_retries=3):
             attempt += 1
     raise Exception("All attempts failed to parse JSON in llm_symbolic_deduce()")
 
+def clean_expression(expr):
+    expr = expr.strip()
+    if expr[0] != "(" and expr[-1] != ")":
+        expr = "(" + expr + ")"
+    return expr
+
+def initialize_queue(expr, ckpt, ckpt_file, verbose):
+    """Initialize the BFS queue from checkpoint or scratch."""
+    if ckpt:
+        with open(ckpt_file, 'r') as file:
+            for line in file:
+                current_list = eval(line.strip())
+                prev_q = current_list
+            return prev_q
+    else:
+        # start new ckpt file
+        with open(ckpt_file, 'w'): 
+            pass
+        
+        # check and apply implication/biconditional
+        res = apply_bi_imp(expr, verbose) # returns (law, simplified_expr)
+        if res != (None, None):
+            return [((res[1]), [expr, res[1]], [res[0]])] # BFS queue [(expr, expr_history, law_history)]
+        else:
+            return [(expr, [expr], [])]                   # BFS queue [(expr, expr_history, law_history)]
+
 # ---------------solver---------------
 
 def proof_engine(expr, K, T, B): 
@@ -160,31 +123,9 @@ def proof_engine(expr, K, T, B):
 
     If you're using Chain of Thought (--cot): B=1 and K=1
     """
-    # to store finished proofs in (expr, expr_history, law_history) format 
-    unique_proofs = []
-
-    # preprocess expression
-    expr = expr.strip()
-    if expr[0] != "(" and expr[-1] != ")": expr = "(" + expr + ")"
-    
-    # create q from checkpoint or scratch
-    if ckpt:
-        with open(ckpt_file, 'r') as file:
-            for line in file:
-                current_list = eval(line.strip())
-                prev_q = current_list
-            q = prev_q
-    else:
-        # start new ckpt file
-        with open(ckpt_file, 'w'): 
-            pass
-        
-        # check and apply implication/biconditional
-        res = apply_bi_imp(expr, verbose) # returns (law, simplified_expr)
-        if res != (None, None):
-            q = [((res[1]), [expr, res[1]], [res[0]])] # BFS queue [(expr, expr_history, law_history)]
-        else:
-            q = [(expr, [expr], [])]                   # BFS queue [(expr, expr_history, law_history)]
+    unique_proofs = [] # to store finished proofs in (expr, expr_history, law_history) format 
+    expr = clean_expression(expr)
+    q = initialize_queue(expr, ckpt, ckpt_file, verbose) # create q from checkpoint or scratch
 
     for t in range(T): # step limit (tree depth)
         print(f"-------------------------------\n[TREE DEPTH]: {t+1}/{T}")
@@ -217,7 +158,11 @@ def proof_engine(expr, K, T, B):
                 llm_res = llm(message=llm_message) # send message to llm and collect its text response
                 if choice_dict:
                     # TODO: make it with *respect to the probabilities* and have it print values
-                    choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message) 
+                    if random_select:
+                        choice_number = str(random.randint(0, len(choice_dict) - 1))
+                        new_expr, new_law = choice_dict[choice_number]
+                    else:
+                        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message) 
                     
                     # update structures and add node to BFS queue
                     if del_choice:
@@ -229,7 +174,8 @@ def proof_engine(expr, K, T, B):
                     # simplify if possible                    
                     item = simplify(expr=new_expr, item_history=item, verbose=verbose) or item
 
-                    if verbose: print(f"[NEW NODE (T={t+1},B=({i+1}/{B})]: new_expr={item[0]}, {new_law=}, {expr_history=}, {law_history=}")
+                    if verbose: 
+                        print(f"[NEW NODE (T={t+1},B=({i+1}/{B})]: new_expr={item[0]}, {new_law=}, {expr_history=}, {law_history=}")
 
                     res = check_proof(item, unique_proofs, q)
 
@@ -238,8 +184,9 @@ def proof_engine(expr, K, T, B):
 
                     new_q.append(item) 
         
-        # evaluate and select top nodes
-        values = evaluate_tree(new_q) # rates each node on scale of 1-10
+        if not random_select:
+            # evaluate and select top nodes
+            values = evaluate_tree(new_q) # rates each node on scale of 1-10
         q = prune_tree(values, new_q, K) # level-wise pruning
         
         # write to guide/ckpt.txt
@@ -271,9 +218,10 @@ if __name__ == '__main__':
     parser.add_argument("--pure_llm", action='store_true', help="Evaluate all expressions through llm instead of symbolic engine")
     parser.add_argument("--del_choice", action='store_true', help="Delete law option after LLM choice")
     parser.add_argument("--ckpt", action='store_true', help="Resume from last q in guide/ckpt.txt")
+    parser.add_argument("--random", action='store_true', help="Randomly select shortest expression")
     args = parser.parse_args()
     
-    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose
+    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose, random_select
     T = args.T
     B = args.B
     K = args.K
@@ -284,18 +232,21 @@ if __name__ == '__main__':
     ckpt_file = "guide/ckpt.txt"
     verbose = args.verbose 
     model = args.model
+    random_select = args.random
 
     if args.cot:
         B = 1 # single thread of thought
         K = 1
     
-    llm = partial(llm_api_call, model=model)
+    llm = partial(llm_api_call, model=model) # initialize llm
 
     print(f"\nSOLVING: '{args.expr}'")
     print(f"LLM: {model}")
     print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}, {del_choice=}, {ckpt=}")
     if pure_llm: 
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
+    elif random_select:
+        print("ENGINE: random selection")
     else:
         print("ENGINE: symbolic")
     if args.cot: print("METHOD: chain of thoughts")
