@@ -39,7 +39,6 @@ pip install -r requirements.txt
     - [x] simplification engine
     - [x] complete implication and bi-conditional laws
     - [x] fix expression bugs (below in bug tracker)
-- [x] Solve CK's hard expressions
 - [ ] Write testcases
     - [x] simplify() (Simplification engine)
     - [x] is_reduced()
@@ -66,6 +65,31 @@ pip install -r requirements.txt
         - [0.1, 0.25, 0.5]
     - [ ] temperature tests 
         - [0, 0.25, 0.5, 0.75]
+    - [ ] Compare shortest vs longest proofs 
+    - [ ] How variable are the results in terms of temp
+    - [ ] Does LLM give us insights 
+	    - Helps with larger and larger formulas?
+    - [ ] Incrementally increase size of formula
+    - [ ] How often does it succeed
+    - [ ] Find short proofs 
+    - [ ] Successful solve = repeat experiment X times with depth and time out and see how often its solved 
+    - [ ] Shortest proof == bfs or dfs? vs LLM solution 
+    - [ ] Give complexity measure like number of variables, depth, simulated annealing -> prob inverse of complexity
+    - [ ] Is it just doing any better than random guesses?
+- [ ] Complex expressions
+    - [x] CK's
+    - [ ] "(a -> b) > ((b > c) > (a > c))"
+    - [ ] [Common Tautologies](https://mathweb.ucsd.edu/~jeggers/math109/tautologies.pdf) 19-25
+        - [ ] "(P and (P > Q)) > Q"
+        - [ ] "((P > Q) and not Q) > not P"
+        - [ ] "((P > Q) and (Q > R)) > (P > R)"
+        - [ ] "((P or Q) and not P ) > Q"
+        - [ ] "(P > C) > not P"
+        - [ ] "((P > Q) and (R > S)) > ((P or R) > (Q or S))"
+        - [ ] "(P > Q) > ((P or R) > (Q or R))"
+    - [ ] [SATLIB - Benchmark Problems](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)
+    - [ ] Unsatisfiable formulas and negate
+
 
 ## Proof Engine
 
