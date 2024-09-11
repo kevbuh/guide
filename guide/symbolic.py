@@ -361,27 +361,6 @@ def symbolic_deduce(expr, verbose=False):
                     new_expressions["Absorption Law 2"].append(modified_code[:-1])
                     if verbose: print(f" - Absorption Law 2: {expr} = {modified_code[:-1]}")
 
-    # Domination Law
-    parsed_code = deepcopy(parsed_code_deepcopy)
-    for node in walk(parsed_code): 
-        match node:
-            case BoolOp(op=Or(), values=[a, Constant(value=1)]):
-                new_node = Constant(value=1)
-                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                modified_code = astor.to_source(replaced_tree)
-                new_expressions["Domination Law OR"].append(modified_code[:-1])
-                if verbose: print(f" - Domination Law: {expr} = {modified_code[:-1]}")
-
-    parsed_code = deepcopy(parsed_code_deepcopy)
-    for node in walk(parsed_code): 
-        match node:
-            case BoolOp(op=And(), values=[a, Constant(value=0)]):
-                new_node = Constant(value=0)
-                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
-                modified_code = astor.to_source(replaced_tree)
-                new_expressions["Domination Law AND"].append(modified_code[:-1])
-                if verbose: print(f" - Domination Law 2: {expr} = {modified_code[:-1]}")
-
     # DeMorgan's Law
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code):
@@ -411,8 +390,8 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b]))
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["DeMorgan Law 1"].append(modified_code[:-1])
-                if verbose: print(f" - DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
+                new_expressions["DeMorgan Law RHS 1"].append(modified_code[:-1])
+                if verbose: print(f" - DeMorgan's Law RHS 1: {expr} = {modified_code[:-1]}")
 
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code): 
@@ -421,8 +400,8 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b]))
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["DeMorgan Law 2"].append(modified_code[:-1])
-                if verbose: print(f" - DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
+                new_expressions["DeMorgan Law RHS 2"].append(modified_code[:-1])
+                if verbose: print(f" - DeMorgan's Law RHS 2: {expr} = {modified_code[:-1]}")
 
     # Implication Law
     parsed_code = deepcopy(parsed_code_deepcopy)
@@ -443,8 +422,8 @@ def symbolic_deduce(expr, verbose=False):
                 new_node = Compare(left=a, ops=[Gt()], comparators=[b])
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
-                new_expressions["Implication Law"].append(modified_code[:-1])
-                if verbose: print(f" - Implication Law: {expr} = {modified_code[:-1]}")
+                new_expressions["Implication Law RHS"].append(modified_code[:-1])
+                if verbose: print(f" - Implication Law RHS: {expr} = {modified_code[:-1]}")
 
     # check if expr is unreducable expression
     can_simplify = simplify(expr=expr, item_history=("", [], []))
