@@ -259,6 +259,27 @@ def symbolic_deduce(expr, verbose=False):
                 new_expressions["Distributive Law OR"].append(modified_code[:-1])
                 if verbose: print(f" - Distributive Law OR: {expr} = {modified_code[:-1]}")
 
+    # Distributive Law RHS
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code): 
+        match node:
+            case BoolOp(op=Or(), values=[BoolOp(op=And(), values=[a, b]), BoolOp(op=And(), values=[a2, c])]):
+                new_node = BoolOp(op=And(), values=[a, BoolOp(op=Or(), values=[b, c])])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["Distributive Law RHS AND"].append(modified_code[:-1])
+                if verbose: print(f" - Distributive Law AND: {expr} = {modified_code[:-1]}")
+
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code): 
+        match node:
+            case BoolOp(op=And(), values=[BoolOp(op=Or(), values=[a, b]), BoolOp(op=Or(), values=[a2, c])]):
+                new_node = BoolOp(op=Or(), values=[a, BoolOp(op=And(), values=[b, c])])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["Distributive Law RHS OR"].append(modified_code[:-1])
+                if verbose: print(f" - Distributive Law OR: {expr} = {modified_code[:-1]}")
+
     # Identity Law
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code):

@@ -80,7 +80,7 @@ pip install -r requirements.txt
     - [x] CK's
     - [ ] "(a -> b) > ((b > c) > (a > c))"
     - [ ] [Common Tautologies](https://mathweb.ucsd.edu/~jeggers/math109/tautologies.pdf) 19-25
-        - [ ] "(P and (P > Q)) > Q"
+        - [x] "(P and (P > Q)) > Q"
         - [ ] "((P > Q) and not Q) > not P"
         - [ ] "((P > Q) and (Q > R)) > (P > R)"
         - [ ] "((P or Q) and not P ) > Q"

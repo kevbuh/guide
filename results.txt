@@ -75,6 +75,55 @@ Proof:
 ≡ (0 or not 0)                        Negation Law AND
 ≡ (not 0)                             Simplification Law
 ≡ (1)                                 Simplification Law
+-----9----------
+Proof:
+(not ((a or a) and (a or b) or (a and b) and b) or ((a or a) and (a or b) or (a and b) and b))
+≡ (not ((a or a) and (a or b)) and not ((a and b) and b) or ((a or a) and (a or
+    b) or (a and b) and b)) DeMorgan Law 1
+≡ (not ((a or a) and (a or b)) and not ((a and b) and b) or ((a or a) and (a or
+    b) or a and (b and b))) Associative Law AND
+≡ (not ((a or a) and (a or b)) and not ((a and b) and b) or (a and (a or b) or
+    a and (b and b))) Idempotent Law OR
+≡ (not ((a or a) and (a or b)) and not (a and (b and b)) or (a and (a or b) or
+    a and (b and b))) Associative Law AND
+≡ (not ((a or a) and (a or b)) and not (a and (b and b)) or (a or a and (b and
+    b))) Absorption Law 2
+≡ (not ((a or a) and (a or b)) and not (a and (b and b)) or a) Absorption Law 1
+≡ (not (a and (a or b)) and not (a and (b and b)) or a) Idempotent Law OR
+≡ (not a and not (a and (b and b)) or a) Absorption Law 2
+≡ (not a and (not a or not (b and b)) or a) DeMorgan Law 2
+≡ ((not a) or a)                      Absorption Law 2
+≡ (1)                                 Negation Law OR
+≡ TAUTOLOGY
+-----10----------
+(P and (P > Q)) > Q
+≡ (not (P and (not P or Q)) or Q)     Implication Law
+≡ (not ((not P or Q) and P) or Q)     Commutative Law AND
+≡ (Q or not ((not P or Q) and P))     Commutative Law OR
+≡ (not ((not P or Q) and P) or Q)     Commutative Law OR
+≡ (not (P and (not P or Q)) or Q)     Commutative Law AND
+≡ ((not P or not (not P or Q)) or Q)  DeMorgan Law 2
+≡ (not P or (not (not P or Q) or Q))  Associative Law OR
+≡ (not P or (not not P and not Q or Q)) DeMorgan Law 1
+≡ (not P or (P and not Q or Q))       Simplification Law (Double Negation)
+≡ (not P or (not Q and P or Q))       Commutative Law AND
+≡ ((not Q and P or Q) or not P)       Commutative Law OR
+≡ (not Q and P or (Q or not P))       Associative Law OR
+≡ (P and not Q or (Q or not P))       Commutative Law AND
+≡ (not Q and P or (Q or not P))       Commutative Law AND
+≡ ((Q or not P) or not Q and P)       Commutative Law OR
+≡ (((Q or not P) or not Q) and ((Q or not P) or P)) Distributive Law OR
+≡ ((Q or (not P or not Q)) and (Q or (not P or P))) Associative Law OR
+≡ ((Q or (not P or not Q)) and (Q or 1)) Negation Law OR
+≡ ((Q or (not P or not Q)) and 1)     Simplification Law
+≡ (((not P or not Q) or Q) and 1)     Commutative Law OR
+≡ ((not P or not Q) or Q)             Simplification Law
+≡ (not P or (not Q or Q))             Associative Law OR
+≡ (not P or 1)                        Negation Law OR
+≡ (1)                                 Simplification Law
+≡ TAUTOLOGY
+
+
 ------------------------pure llm results---------------------------------------------
 Pure llm (no symbolic) results:
 python3 guide/proof_engine.py --early_stop  --verbose --expr="(a or (a and b)) -> a"
