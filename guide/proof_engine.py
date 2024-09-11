@@ -6,7 +6,7 @@ import random
 from llm import llm_api_call
 from symbolic import symbolic_deduce, simplify, apply_bi_imp, is_reduced
 from prompts import value_prompt, deduction_prompt
-from utils import create_propose_prompt, get_llm_choice, get_llm_value
+from utils import create_propose_prompt, get_llm_choice, get_llm_value, get_greedy_choice
     
 def get_value(expr, expr_history):
     prompt = value_prompt.format(expr=expr, expr_history=expr_history)
@@ -161,6 +161,8 @@ def proof_engine(expr, K, T, B):
                     if random_select:
                         choice_number = str(random.randint(0, len(choice_dict) - 1))
                         new_expr, new_law = choice_dict[choice_number]
+                    elif greedy:
+                        choice_number, new_expr, new_law = get_greedy_choice(choice_dict)  
                     else:
                         choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message) 
                     
@@ -218,10 +220,12 @@ if __name__ == '__main__':
     parser.add_argument("--pure_llm", action='store_true', help="Evaluate all expressions through llm instead of symbolic engine")
     parser.add_argument("--del_choice", action='store_true', help="Delete law option after LLM choice")
     parser.add_argument("--ckpt", action='store_true', help="Resume from last q in guide/ckpt.txt")
-    parser.add_argument("--random", action='store_true', help="Randomly select shortest expression")
+    parser.add_argument("--random", action='store_true', help="Randomly select expression")
+    parser.add_argument("--greedy", action='store_true', help="Greedy select shortest expression")
+
     args = parser.parse_args()
     
-    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose, random_select
+    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose, random_select, greedy
     T = args.T
     B = args.B
     K = args.K
@@ -233,8 +237,9 @@ if __name__ == '__main__':
     verbose = args.verbose 
     model = args.model
     random_select = args.random
+    greedy = args.greedy
 
-    if args.cot:
+    if args.cot: # chain of thought
         B = 1 # single thread of thought
         K = 1
     
@@ -243,13 +248,20 @@ if __name__ == '__main__':
     print(f"\nSOLVING: '{args.expr}'")
     print(f"LLM: {model}")
     print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}, {del_choice=}, {ckpt=}")
+
     if pure_llm: 
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
     elif random_select:
         print("ENGINE: random selection")
+    elif greedy:
+        print("ENGINE: greedy selection")
     else:
         print("ENGINE: symbolic")
-    if args.cot: print("METHOD: chain of thoughts")
-    else: print("METHOD: tree of thoughts")
+
+    if args.cot: 
+        print("METHOD: chain of thoughts")
+    else: 
+        print("METHOD: tree of thoughts")
+
     print("----------------------------")
     proof_engine(expr=args.expr, T=T, B=B, K=K)

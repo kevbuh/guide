@@ -97,7 +97,6 @@ class booleanTree:
                 modules_.append(node_name)
         return modules_
 
-
 class helpers:
     """
     Helper class which contains all the important functions
@@ -129,7 +128,6 @@ class helpers:
                 return False
         return True
     
-
 def create_propose_prompt(expr, expr_deductions):
     """output law and expression in a numbered list and create prompt"""
     choices_list = []
@@ -193,3 +191,13 @@ def get_llm_value(llm_text, llm_message):
         return value
     else:
         raise ValueError("ERROR: Choice number not found after maximum retries")
+    
+def get_greedy_choice(choice_dict):
+    shortest = float("inf")
+    choice_number, new_expr, new_law = "", "", ""
+    for key, (expr, law) in choice_dict.items():
+        cur_len = len(choice_dict)
+        if cur_len < shortest:
+            shortest = cur_len
+            choice_number, new_expr, new_law = key, expr, law
+    return choice_number, new_expr, new_law
