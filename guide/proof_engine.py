@@ -11,7 +11,7 @@ from utils import create_propose_prompt, get_llm_choice, get_llm_value, get_gree
 def get_value(expr, expr_history):
     prompt = value_prompt.format(expr=expr, expr_history=expr_history)
     llm_res = llm(message=prompt)
-    value = get_llm_value(llm_res, prompt)
+    value = get_llm_value(llm_res, prompt, llm)
     return value
 
 def evaluate_tree(q):
@@ -164,7 +164,7 @@ def proof_engine(expr, K, T, B):
                     elif greedy:
                         choice_number, new_expr, new_law = get_greedy_choice(choice_dict)  
                     else:
-                        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message) 
+                        choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message, llm) 
                     
                     # update structures and add node to BFS queue
                     if del_choice:

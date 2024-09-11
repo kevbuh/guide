@@ -78,10 +78,10 @@ pip install -r requirements.txt
     - [ ] Is it just doing any better than random guesses?
 - [ ] Complex expressions
     - [x] CK's
-    - [ ] "(a -> b) > ((b > c) > (a > c))"
+    - [ ] "(a > b) > ((b > c) > (a > c))"
     - [ ] [Common Tautologies](https://mathweb.ucsd.edu/~jeggers/math109/tautologies.pdf) 19-25
         - [x] "(P and (P > Q)) > Q"
-        - [ ] "((P > Q) and not Q) > not P"
+        - [x] "((P > Q) and not Q) > not P"
         - [ ] "((P > Q) and (Q > R)) > (P > R)"
         - [ ] "((P or Q) and not P ) > Q"
         - [ ] "(P > C) > not P"
@@ -89,7 +89,6 @@ pip install -r requirements.txt
         - [ ] "(P > Q) > ((P or R) > (Q or R))"
     - [ ] [SATLIB - Benchmark Problems](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)
     - [ ] Unsatisfiable formulas and negate
-
 
 ## Proof Engine
 
@@ -249,28 +248,12 @@ $\Leftrightarrow: \text{Bi-Conditional}$
 9. **Double Negation (Involution) Law**:
     - $\lnot (\lnot A) = A$
 
-10. **Implication Transformation**:
+10. **Implication**:
     - $A \Rightarrow B = \lnot A \lor B$
 
-11. **Consensus Theorem**:
-    - $(A \land B) \lor (\lnot A \land C) \lor (B \land C) = (A \land B) \lor (\lnot A \land C)$
-
-12. **Consensus Law**:
-    - $(A \land B) \lor (\lnot B \land C) \lor (A \land C) = (A \land B) \lor (\lnot B \land C)$
-
-13. **Adjacency Law**:
-    - $(A \land B) \lor (A \land \lnot B) = A$
-
-14. **Simplification Law**:
-    - $(A \lor B) \land (A \lor \lnot B) = A$
-
-15. **Implication Laws**:
-    - $A \Rightarrow B = \lnot A \lor B$
-    - $\lnot (A \Rightarrow B) = A \land \lnot B$
-
-16. **Biconditional (iff) Laws**:
-    - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$
-    <!-- - $\lnot (A \Leftrightarrow B) = A \oplus B$ -->
+<!-- 11. **Biconditional (iff) Laws**: -->
+<!-- - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$ -->
+<!-- - $\lnot (A \Leftrightarrow B) = A \oplus B$ -->
 
 <!-- 11. **Exclusive OR (XOR) Properties**:
     - $A \oplus B = (A \land \lnot B) \lor (\lnot A \land B)$

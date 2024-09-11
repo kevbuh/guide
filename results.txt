@@ -122,6 +122,36 @@ Proof:
 ≡ (not P or 1)                        Negation Law OR
 ≡ (1)                                 Simplification Law
 ≡ TAUTOLOGY
+-----11----------
+((P > Q) and not Q) > (not P)
+≡ ((not Q and P > Q) > (not P))       Commutative Law AND
+≡ (not (not Q and (not P or Q)) or not P) Implication Law
+≡ ((not not Q or not (not P or Q)) or not P) DeMorgan Law 2
+≡ ((Q or not (not P or Q)) or not P)  Simplification Law (Double Negation)
+≡ ((Q or not not P and not Q) or not P) DeMorgan Law 1
+≡ ((Q or P and not Q) or not P)       Simplification Law (Double Negation)
+≡ (not P or (Q or P and not Q))       Commutative Law OR
+≡ (P > (Q or P and not Q))            Implication Law RHS
+≡ (P > (P and not Q or Q))            Commutative Law OR
+≡ (not P or (P and not Q or Q))       Implication Law
+≡ (not P or (not Q and P or Q))       Commutative Law AND
+≡ (not P or (P and not Q or Q))       Commutative Law AND
+≡ (P > (P and not Q or Q))            Implication Law RHS
+≡ (P > (Q or P and not Q))            Commutative Law OR
+≡ (P > (P and not Q or Q))            Commutative Law OR
+≡ (not P or (P and not Q or Q))       Implication Law
+≡ ((P and not Q or Q) or not P)       Commutative Law OR
+≡ (not P or (Q or P and not Q))       Commutative Law OR
+≡ (not P or (Q or P) and (Q or not Q)) Distributive Law OR
+≡ ((not P or (Q or P)) and (not P or (Q or not Q))) Distributive Law OR
+≡ (((Q or P) or not P) and (not P or (Q or not Q))) Commutative Law OR
+≡ (((Q or P) or not P) and (not P or 1)) Negation Law OR
+≡ (((Q or P) or not P) and 1)         Simplification Law
+≡ ((Q or P) or not P)                 Identity Law
+≡ (Q or (P or not P))                 Associative Law OR
+≡ (Q or 1)                            Negation Law OR
+≡ (1)                                 Simplification Law
+≡ TAUTOLOGY
 
 
 ------------------------pure llm results---------------------------------------------

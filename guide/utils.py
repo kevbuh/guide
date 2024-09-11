@@ -150,7 +150,7 @@ def create_propose_prompt(expr, expr_deductions):
 
     return llm_message, choice_dict
 
-def get_llm_choice(llm_text, choice_dict, llm_message):
+def get_llm_choice(llm_text, choice_dict, llm_message, llm):
     """search for LLM choice selection and send choice back to symbolic engine"""
     pattern = r"LLM CHOICE: #(\d+)\."
     match = re.search(pattern, llm_text)
@@ -174,7 +174,7 @@ def get_llm_choice(llm_text, choice_dict, llm_message):
 
     raise ValueError("ERROR: Valid choice number not found after maximum retries")
 
-def get_llm_value(llm_text, llm_message):
+def get_llm_value(llm_text, llm_message, llm):
     """search for LLM value and send choice back"""
     match = re.search(r'\d+', llm_text)
     retries = 0
