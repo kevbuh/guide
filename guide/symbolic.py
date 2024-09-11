@@ -403,12 +403,44 @@ def symbolic_deduce(expr, verbose=False):
                 new_expressions["DeMorgan Law 2"].append(modified_code[:-1])
                 if verbose: print(f" - DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
 
+    # DeMorgan's Law RHS
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code):
+        match node:
+            case BoolOp(op=And(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)]):
+                new_node = UnaryOp(op=Not(), operand=BoolOp(op=Or(), values=[a, b]))
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["DeMorgan Law 1"].append(modified_code[:-1])
+                if verbose: print(f" - DeMorgan's Law 1: {expr} = {modified_code[:-1]}")
+
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code): 
+        match node:
+            case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), UnaryOp(op=Not(), operand=b)]):
+                new_node = UnaryOp(op=Not(), operand=BoolOp(op=And(), values=[a, b]))
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["DeMorgan Law 2"].append(modified_code[:-1])
+                if verbose: print(f" - DeMorgan's Law 2: {expr} = {modified_code[:-1]}")
+
     # Implication Law
     parsed_code = deepcopy(parsed_code_deepcopy)
     for node in walk(parsed_code): 
         match node:
             case Compare(left=a, ops=[Gt()], comparators=[b]):
                 new_node = BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), b])
+                replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
+                modified_code = astor.to_source(replaced_tree)
+                new_expressions["Implication Law"].append(modified_code[:-1])
+                if verbose: print(f" - Implication Law: {expr} = {modified_code[:-1]}")
+
+    # Implication Law RHS
+    parsed_code = deepcopy(parsed_code_deepcopy)
+    for node in walk(parsed_code): 
+        match node:
+            case BoolOp(op=Or(), values=[UnaryOp(op=Not(), operand=a), b]):
+                new_node = Compare(left=a, ops=[Gt()], comparators=[b])
                 replaced_tree = ReplaceVisitor(node, new_node).visit(parsed_code)
                 modified_code = astor.to_source(replaced_tree)
                 new_expressions["Implication Law"].append(modified_code[:-1])
