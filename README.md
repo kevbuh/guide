@@ -83,10 +83,11 @@ pip install -r requirements.txt
         - [x] "(P and (P > Q)) > Q"
         - [x] "((P > Q) and not Q) > not P"
         - [ ] "((P > Q) and (Q > R)) > (P > R)"
-        - [ ] "((P or Q) and not P ) > Q"
+        - [x] "((P or Q) and not P ) > Q"
         - [ ] "(P > C) > not P"
+            - This isn't a tautology?
         - [ ] "((P > Q) and (R > S)) > ((P or R) > (Q or S))"
-        - [ ] "(P > Q) > ((P or R) > (Q or R))"
+        - [x] "(P > Q) > ((P or R) > (Q or R))"
     - [ ] [SATLIB - Benchmark Problems](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html)
     - [ ] Unsatisfiable formulas and negate
 
@@ -143,8 +144,9 @@ Proof:
 CLI Arguments
 ```bash
 usage: proof_engine.py [-h] [--expr EXPR] [--num_steps NUM_STEPS] [--debug]
-                       [--verbose] [--cot] [--claude] [--T T] [--B B] [--K K]
-                       [--early_stop] [--pure_llm] [--del_choice] [--ckpt]
+                       [--verbose] [--cot] [--model MODEL] [--T T] [--B B]
+                       [--K K] [--early_stop] [--pure_llm] [--unique] [--ckpt]
+                       [--random] [--greedy]
 
 options:
   -h, --help            show this help message and exit
@@ -154,15 +156,16 @@ options:
   --debug               Print debug statements
   --verbose             Print out states at each step
   --cot                 Use Chain of Thought
-  --claude              Use Claude-3-Haiku
+  --model MODEL         Specify a model to use
   --T T                 ToT tree depth
   --B B                 ToT branching factor
   --K K                 ToT max number of nodes per level
   --early_stop          Return on first proof found
-  --pure_llm            Evaluate all expressions through llm instead of
-                        symbolic engine
-  --del_choice          Delete law option after LLM choice
+  --pure_llm            Evaluate all expressions through llm instead of symbolic engine
+  --unique              Select unique steps at each node
   --ckpt                Resume from last q in guide/ckpt.txt
+  --random              Randomly select expression
+  --greedy              Greedy select shortest expression
 ```
 
 ## Synthetic Mirror
@@ -188,10 +191,6 @@ python3 guide/symbolic_mirror.py
 
 ### *Notation*
 
-<!-- $T: \text{TRUE}$ -->
-
-<!-- $F: \text{FALSE}$ -->
-
 $\land: \text{AND}$
 
 $\lor: \text{OR}$
@@ -204,13 +203,6 @@ $\Rightarrow: \text{Implication}$
 
 $\Leftrightarrow: \text{Bi-Conditional}$
 
-<!-- $$ \\{a\dots z\\}: \text{Expression} $$ -->
-
-<!-- $$ A \uparrow B: \text{NAND} $$ -->
-
-<!-- $$ A \downarrow B: \text{NOR} $$ -->
-
-<!-- $$ A \odot B: \text{XNOR} $$ -->
 ### *Laws*
 
 1. **Commutative Law**:
@@ -251,26 +243,7 @@ $\Leftrightarrow: \text{Bi-Conditional}$
 10. **Implication**:
     - $A \Rightarrow B = \lnot A \lor B$
 
-<!-- 11. **Biconditional (iff) Laws**: -->
-<!-- - $A \Leftrightarrow B = (A \land B) \lor (\lnot A \land \lnot B)$ -->
-<!-- - $\lnot (A \Leftrightarrow B) = A \oplus B$ -->
-
-<!-- 11. **Exclusive OR (XOR) Properties**:
-    - $A \oplus B = (A \land \lnot B) \lor (\lnot A \land B)$
-    - $A \oplus B = (A \lor B) \land \lnot (A \land B)$
-    - $A \oplus 0 = A$
-    - $A \oplus A = 0$ -->
-
-<!-- 13. **NAND and NOR Laws**:
-    - $A \uparrow B = \lnot(A \land B)$
-    - $A \downarrow B = \lnot(A \lor B)$ -->
-
-<!-- 14. **Exclusive NOR (XNOR) Properties**:
-    - $A \oplus B = \lnot(A \oplus B)$
-    - $A \odot B = (A \land B) \lor (\lnot A \land \lnot B)$ -->
-
 <!-- ## Bug tracker -->
-
 <!-- - Symbolic Engine -->
 <!-- - Absorption Law doesn't trigger for "(a and (a or b))" -->
 <!-- - Absorption Law doesn't trigger for "(a or (a and b)) -> a" -->

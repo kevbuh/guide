@@ -149,7 +149,9 @@ def proof_engine(expr, K, T, B):
                 if can_simplify:
                     new_q.append(can_simplify)
                 else:
-                    check_proof(item, unique_proofs, q, done=False)
+                    res = check_proof(item, unique_proofs, q, done=False)
+                    if early_stop and res != (None, None):
+                        return res
                 continue
 
             # generate B new thoughts per node
@@ -167,7 +169,7 @@ def proof_engine(expr, K, T, B):
                         choice_number, new_expr, new_law = get_llm_choice(llm_res, choice_dict, llm_message, llm) 
                     
                     # update structures and add node to BFS queue
-                    if del_choice:
+                    if unique:
                         del expr_deductions[new_law]
                     expr_history_new = expr_history + [new_expr]
                     law_history_new = law_history + [new_law]
@@ -218,20 +220,20 @@ if __name__ == '__main__':
     parser.add_argument("--K",  type=int, default=5, help="ToT max number of nodes per level")
     parser.add_argument("--early_stop", action='store_true', help="Return on first proof found")
     parser.add_argument("--pure_llm", action='store_true', help="Evaluate all expressions through llm instead of symbolic engine")
-    parser.add_argument("--del_choice", action='store_true', help="Delete law option after LLM choice")
+    parser.add_argument("--unique", action='store_true', help="Select unique steps at each node")
     parser.add_argument("--ckpt", action='store_true', help="Resume from last q in guide/ckpt.txt")
     parser.add_argument("--random", action='store_true', help="Randomly select expression")
     parser.add_argument("--greedy", action='store_true', help="Greedy select shortest expression")
 
     args = parser.parse_args()
     
-    global T, B, K, early_stop, llm, pure_llm, del_choice, ckpt, ckpt_file, verbose, random_select, greedy
+    global T, B, K, early_stop, llm, pure_llm, unique, ckpt, ckpt_file, verbose, random_select, greedy
     T = args.T
     B = args.B
     K = args.K
     early_stop = args.early_stop
     pure_llm = args.pure_llm
-    del_choice = args.del_choice
+    unique = args.unique
     ckpt = args.ckpt
     ckpt_file = "guide/ckpt.txt"
     verbose = args.verbose 
@@ -247,7 +249,7 @@ if __name__ == '__main__':
 
     print(f"\nSOLVING: '{args.expr}'")
     print(f"LLM: {model}")
-    print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}, {del_choice=}, {ckpt=}")
+    print(f"PARAMS: {T=}, {B=}, {K=}, {early_stop=}, {pure_llm=}, {unique=}, {ckpt=}")
 
     if pure_llm: 
         print("ENGINE: pure llm **WARNING: Not using symbolic engine, proof may have hallucinations**")
