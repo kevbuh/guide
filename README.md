@@ -6,11 +6,13 @@
 
 <br/>
 
-```With the release of ChatGPT o1, we have decided to halt research on this project. Nevertheless we want to share our intermediate results. ```
+```This was a side project done at CUPLV. With the release of ChatGPT o1, we have decided to halt research on this project.```
 
 Enhanced Reasoning Tautological Proof Engine guided by Tree-of-Thoughts LLM Search
 
 Paper: https://docs.google.com/document/d/1liiAKZFuTx96SoPN0SpGxQ_fUkkf4cPevdCTqcdylPo/edit?usp=sharing
+
+Google Drive: https://drive.google.com/drive/folders/1jO0-AwkdevsX-YyOQKRhMk6_uAEuWx_H?usp=sharing
 
 ## Setup
 ```bash
