@@ -4,7 +4,9 @@
     <img src="./assets/guided llm v5.svg" alt="System Overview" width="600"/>
 </div>
 
-Logical equivalence symbolic engine guided by tree-of-thoughts 
+Enhanced Reasoning Tautological Proof Engine guided by Tree-of-Thoughts LLM Search
+
+Paper: https://docs.google.com/document/d/1liiAKZFuTx96SoPN0SpGxQ_fUkkf4cPevdCTqcdylPo/edit?usp=sharing
 
 ## Setup
 ```bash
